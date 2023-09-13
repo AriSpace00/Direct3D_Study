@@ -11,6 +11,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "01_RenderingTriangle", "01_
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "02_PixelShader", "02_PixelShader\02_PixelShader.vcxproj", "{EC7520F4-FE3A-4127-9114-80BC88EC2A7B}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "03_IndexBuffer", "03_IndexBuffer\03_IndexBuffer.vcxproj", "{AC58F870-9469-4F87-929C-B9993C52ED64}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -51,6 +53,14 @@ Global
 		{EC7520F4-FE3A-4127-9114-80BC88EC2A7B}.Release|x64.Build.0 = Release|x64
 		{EC7520F4-FE3A-4127-9114-80BC88EC2A7B}.Release|x86.ActiveCfg = Release|Win32
 		{EC7520F4-FE3A-4127-9114-80BC88EC2A7B}.Release|x86.Build.0 = Release|Win32
+		{AC58F870-9469-4F87-929C-B9993C52ED64}.Debug|x64.ActiveCfg = Debug|x64
+		{AC58F870-9469-4F87-929C-B9993C52ED64}.Debug|x64.Build.0 = Debug|x64
+		{AC58F870-9469-4F87-929C-B9993C52ED64}.Debug|x86.ActiveCfg = Debug|Win32
+		{AC58F870-9469-4F87-929C-B9993C52ED64}.Debug|x86.Build.0 = Debug|Win32
+		{AC58F870-9469-4F87-929C-B9993C52ED64}.Release|x64.ActiveCfg = Release|x64
+		{AC58F870-9469-4F87-929C-B9993C52ED64}.Release|x64.Build.0 = Release|x64
+		{AC58F870-9469-4F87-929C-B9993C52ED64}.Release|x86.ActiveCfg = Release|Win32
+		{AC58F870-9469-4F87-929C-B9993C52ED64}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

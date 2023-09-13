@@ -149,7 +149,7 @@ bool DemoApp::InitScene()
     Vertex vertices[] =
     {
         Vector3(-0.5, -0.5, 0.5),   // v0
-        Vector3(0,0.5, 0.5),        // v1
+        Vector3(-0.5,0.5, 0.5),        // v1
         Vector3(0.5, -0.5, 0.5)     // v2
     };
 
