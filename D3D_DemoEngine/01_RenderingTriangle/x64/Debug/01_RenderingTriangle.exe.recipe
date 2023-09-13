@@ -2,15 +2,15 @@
 <Project>
   <ProjectOutputs>
     <ProjectOutput>
-      <FullPath>D:\2023_3Q\3D_GraphicsProgamming\D3D_DemoEngine\Direct3D_Study\D3D_DemoEngine\x64\Debug\01_RenderingTriangle.exe</FullPath>
+      <FullPath>D:\게임인재원_5기_프로그래밍과정_2반\3학기\3D 그래픽스 프로그래밍 Assignment\Solutions\김민정\Direct3D_Study\D3D_DemoEngine\x64\Debug\01_RenderingTriangle.exe</FullPath>
     </ProjectOutput>
   </ProjectOutputs>
   <ContentFiles>
     <ContentFile>
-      <FullPath>D:\2023_3Q\3D_GraphicsProgamming\D3D_DemoEngine\Direct3D_Study\D3D_DemoEngine\x64\Debug\BasicPixelShader.cso</FullPath>
+      <FullPath>D:\게임인재원_5기_프로그래밍과정_2반\3학기\3D 그래픽스 프로그래밍 Assignment\Solutions\김민정\Direct3D_Study\D3D_DemoEngine\x64\Debug\BasicPixelShader.cso</FullPath>
     </ContentFile>
     <ContentFile>
-      <FullPath>D:\2023_3Q\3D_GraphicsProgamming\D3D_DemoEngine\Direct3D_Study\D3D_DemoEngine\x64\Debug\BasicVertexShader.cso</FullPath>
+      <FullPath>D:\게임인재원_5기_프로그래밍과정_2반\3학기\3D 그래픽스 프로그래밍 Assignment\Solutions\김민정\Direct3D_Study\D3D_DemoEngine\x64\Debug\BasicVertexShader.cso</FullPath>
     </ContentFile>
   </ContentFiles>
   <SatelliteDlls />

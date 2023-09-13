@@ -1,6 +1,5 @@
 #include "DemoApp.h"
 #include "../Common/Helper.h"
-#include <directxtk/SimpleMath.h>
 #include <d3dcompiler.h>
 
 #pragma comment(lib, "d3d11.lib")
@@ -17,6 +16,13 @@ struct Vertex
     Vertex(Vector3 position) : position(position) {}
 
     Vertex(Vector3 position, Vector4 color) : position(position), color(color) {}
+};
+
+struct ConstantBuffer
+{
+    Matrix WorldMatrix;
+    Matrix ViewMatrix;
+    Matrix ProjectionMatrix;
 };
 
 DemoApp::DemoApp(HINSTANCE hInstance)
@@ -45,6 +51,8 @@ bool DemoApp::Initialize(UINT width, UINT height)
 
 void DemoApp::Update()
 {
+    __super::Update();
+    m_WorldMatrix = XMMatrixRotationY(GameTimer::m_Instance->TotalTime());
 }
 
 void DemoApp::Render()
@@ -54,15 +62,24 @@ void DemoApp::Render()
     // 화면 칠하기
     m_DeviceContext->ClearRenderTargetView(m_RenderTargetView, initColor);
 
+    // Update Variables
+    ConstantBuffer cb;
+    cb.WorldMatrix = XMMatrixTranspose(m_WorldMatrix);
+    cb.ViewMatrix = XMMatrixTranspose(m_ViewMatrix);
+    cb.ProjectionMatrix = XMMatrixTranspose(m_ProjectionMatrix);
+    m_DeviceContext->UpdateSubresource(m_ConstantBuffer, 0, nullptr, &cb, 0, 0);
+
     // Draw 계열 함수를 호출하기 전에 렌더링 파이프라인에 필수 스테이지 설정을 해야한다.
     m_DeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST); // 정점을 이어서 그릴 방식 설정
     m_DeviceContext->IASetVertexBuffers(0, 1, &m_VertexBuffer, &m_VertexBufferStride, &m_VertexBufferOffset);
     m_DeviceContext->IASetInputLayout(m_InputLayout);
+    m_DeviceContext->IASetIndexBuffer(m_IndexBuffer, DXGI_FORMAT_R16_UINT, 0);
     m_DeviceContext->VSSetShader(m_VertexShader, nullptr, 0);
     m_DeviceContext->PSSetShader(m_PixelShader, nullptr, 0);
+    m_DeviceContext->VSSetConstantBuffers(0, 1, &m_ConstantBuffer);
 
     // 삼각형 출력하기
-    m_DeviceContext->Draw(3, 0);
+    m_DeviceContext->DrawIndexed(m_Indices, 0, 0);
 
     // 현재 백 버퍼에서 렌더된 정보를 프론트 버퍼에(스크린) 전달
     m_SwapChain->Present(0, 0);
@@ -128,10 +145,10 @@ bool DemoApp::InitD3D()
 
 void DemoApp::UnInitD3D()
 {
-    SAFE_RELEASE(m_RenderTargetView);
+    SAFE_RELEASE(m_Device);
     SAFE_RELEASE(m_DeviceContext);
     SAFE_RELEASE(m_SwapChain);
-    SAFE_RELEASE(m_Device);
+    SAFE_RELEASE(m_RenderTargetView);
 }
 
 bool DemoApp::InitScene()
@@ -140,35 +157,28 @@ bool DemoApp::InitScene()
     ID3D10Blob* errorMessage = nullptr; // 컴파일 에러 메시지가 저장될 버퍼
 
     // 1. Render() 에서 파이프라인에 바인딩할 버텍스 버퍼 및 버퍼 정보 준비
-    // 아직은 VertexShader의 World, View, Projection 변환을 사용하지 않으므로 
-    // 직접 Normalized Device Coordinate(좌표계)의 위치로 설정한다.
-    //      / ---------------------(1,1,1)   z값은 깊이값
-    //     /                      / |   
-    // (-1,1,0)----------------(1,1,0)        
-    //   |         v1           |   |
-    //   |        /   `         |   |       중앙이 (0,0,0)  
-    //   |       /  +   `       |   |
-    //   |     /         `      |   |
-    //	 |   v0-----------v2    |  /
-    // (-1,-1,0)-------------(1,-1,0)
-
     Vertex vertices[] =
     {
-        Vertex(Vector3(-0.5, -0.5, 0.5), Vector4(1.0f, 0.0f, 0.0f, 1.0f)),       // v0
-        Vertex(Vector3(-0.5,0.5, 0.5), Vector4(0.0f, 1.0f, 0.0f, 1.0f)),            // v1
-        Vertex(Vector3(0.5, 0.5, 0.5), Vector4(0.0f, 0.0f, 1.0f, 1.0f)),        // v2
-        Vertex(Vector3(0.5, -0.5, 0.5), Vector4(0.0f, 0.0f, 1.0f, 1.0f))         // v3
+        Vertex(Vector3(-1.0f, 1.0f, -1.0f), Vector4(1.0f, 0.0f, 0.0f, 1.0f)),       
+        Vertex(Vector3(1.0f, 1.0f, -1.0f), Vector4(0.0f, 1.0f, 0.0f, 1.0f)),       
+        Vertex(Vector3(1.0f, 1.0f, 1.0f), Vector4(1.0f, 0.0f, 0.0f, 1.0f)),       
+        Vertex(Vector3(-1.0f, 1.0f, 1.0f), Vector4(0.1f, 0.1f, 1.0f, 1.0f)),
+        Vertex(Vector3(-1.0f, -1.0f, -1.0f), Vector4(1.0f, 0.0f, 1.0f, 1.0f)),
+        Vertex(Vector3(1.0f, -1.0f, -1.0f), Vector4(0.1f, 0.1f, 1.0f, 1.0f)),
+        Vertex(Vector3(1.0f, -1.0f, 1.0f), Vector4(1.0f, 0.0f, 1.0f, 1.0f)),
+        Vertex(Vector3(-1.0f, -1.0f, 1.0f), Vector4(0.0f, 1.0f, 0.0f, 1.0f))
     };
 
-    D3D11_BUFFER_DESC vbDesc = {};
-    vbDesc.ByteWidth = sizeof(Vertex) * ARRAYSIZE(vertices);
-    vbDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-    vbDesc.Usage = D3D11_USAGE_DEFAULT;
+    D3D11_BUFFER_DESC bd = {};
+    bd.ByteWidth = sizeof(Vertex) * ARRAYSIZE(vertices);
+    bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+    bd.Usage = D3D11_USAGE_DEFAULT;
+    bd.CPUAccessFlags = 0;
 
     // 버텍스 버퍼 생성
     D3D11_SUBRESOURCE_DATA vbData = {};
     vbData.pSysMem = vertices;
-    HR_T(hr = m_Device->CreateBuffer(&vbDesc, &vbData, &m_VertexBuffer));
+    HR_T(hr = m_Device->CreateBuffer(&bd, &vbData, &m_VertexBuffer));
 
     // 버텍스 버퍼 정보
     m_VertexBufferStride = sizeof(Vertex);
@@ -186,20 +196,40 @@ bool DemoApp::InitScene()
         return false;
     }
 
+    // 버텍스 셰이더가 문제없이 생성된 후 Input Layout 생성
     D3D11_INPUT_ELEMENT_DESC layout[] =
     {
         {"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0},
         {"COLOR",    0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0}
     };
-
-    // 버텍스 셰이더가 문제없이 생성된 후 Input Layout 생성
     HR_T(hr = m_Device->CreateInputLayout(layout, ARRAYSIZE(layout), vertexShaderBuffer->GetBufferPointer(), vertexShaderBuffer->GetBufferSize(), &m_InputLayout));
 
     // 3. Render() 에서 파이프라인에 바인딩할 버텍스 셰이더 생성
     HR_T(m_Device->CreateVertexShader(vertexShaderBuffer->GetBufferPointer(), vertexShaderBuffer->GetBufferSize(), NULL, &m_VertexShader));
     SAFE_RELEASE(vertexShaderBuffer);
 
-    // 4. Render() 에서 파이프라인에 바인딩할 픽셀 셰이더 생성
+    // 4. Render() 에서 파이프라인에 바인딩할 인덱스 버퍼 생성
+    WORD indices[] =
+    {
+        3,1,0, 2,1,3,
+        0,5,4, 1,5,0,
+        3,4,7, 0,4,3,
+        1,6,5, 2,6,1,
+        2,7,6, 3,7,2,
+        6,4,5, 7,4,6,
+    };
+    m_Indices = ARRAYSIZE(indices);         // 인덱스 개수 저장
+    bd = {};
+    bd.Usage = D3D11_USAGE_DEFAULT;
+    bd.ByteWidth = sizeof(WORD) * ARRAYSIZE(indices);
+    bd.BindFlags = D3D11_BIND_INDEX_BUFFER;
+    bd.CPUAccessFlags = 0;
+
+    D3D11_SUBRESOURCE_DATA ibData = {};
+    ibData.pSysMem = indices;
+    HR_T(m_Device->CreateBuffer(&bd, &ibData, &m_IndexBuffer));
+
+    // 5. Render() 에서 파이프라인에 바인딩할 픽셀 셰이더 생성
     ID3DBlob* pixelShaderBuffer = nullptr;
     HR_T(CompileShaderFromFile(L"BasicPixelShader.hlsl", "main", "ps_4_0", &pixelShaderBuffer));
     if (FAILED(hr))
@@ -208,9 +238,29 @@ bool DemoApp::InitScene()
         SAFE_RELEASE(errorMessage);
         return false;
     }
-
     HR_T(m_Device->CreatePixelShader(pixelShaderBuffer->GetBufferPointer(), pixelShaderBuffer->GetBufferSize(), NULL, &m_PixelShader));
     SAFE_RELEASE(pixelShaderBuffer);
+
+    // 6. Render() 에서 파이프라인에 바인딩할 상수 버퍼 생성
+    bd.Usage = D3D11_USAGE_DEFAULT;
+    bd.ByteWidth = sizeof(ConstantBuffer);
+    bd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+    bd.CPUAccessFlags = 0;
+    HR_T(m_Device->CreateBuffer(&bd, nullptr, &m_ConstantBuffer));
+
+    // 쉐이더에 전달할 데이터 설정
+    m_WorldMatrix = XMMatrixIdentity();
+
+    // Initialize the view matrix
+    XMVECTOR Eye = XMVectorSet(0.0f, 1.0f, -5.0f, 0.0f);
+    XMVECTOR At = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
+    XMVECTOR Up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
+
+    m_ViewMatrix = XMMatrixLookAtLH(Eye, At, Up);
+
+    // Initialize the projection matrix
+    m_ProjectionMatrix = XMMatrixPerspectiveFovLH(XM_PIDIV2, m_ClientWidth / (FLOAT)m_ClientHeight, 0.01f, 100.0f);
+    return true;
 
     return true;
 }
@@ -218,7 +268,9 @@ bool DemoApp::InitScene()
 void DemoApp::UnInitScene()
 {
     SAFE_RELEASE(m_VertexBuffer);
-    SAFE_RELEASE(m_InputLayout);
+    SAFE_RELEASE(m_IndexBuffer);
     SAFE_RELEASE(m_VertexShader);
     SAFE_RELEASE(m_PixelShader);
+    SAFE_RELEASE(m_InputLayout);
+    SAFE_RELEASE(m_ConstantBuffer);
 }

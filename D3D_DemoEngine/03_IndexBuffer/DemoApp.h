@@ -1,6 +1,11 @@
 #pragma once
 #include <d3d11.h>
 #include "../Common/GameApp.h"
+//#include <d3d11.h>
+#include <directxtk/SimpleMath.h>
+
+using namespace DirectX::SimpleMath;
+using namespace DirectX;
 
 class DemoApp :
     public GameApp
@@ -22,7 +27,13 @@ public:
     ID3D11Buffer* m_VertexBuffer = nullptr;                 // 버텍스 버퍼
     UINT m_VertexBufferStride = 0;                          // 버텍스 하나의 크기
     UINT m_VertexBufferOffset = 0;                          // 버텍스 버퍼의 오프셋
-    UINT m_VertexCount = 0;                                 // 버텍스 개수
+    ID3D11Buffer* m_IndexBuffer = nullptr;                  // 인덱스 버퍼
+    int m_Indices = 0;                                      // 인덱스 개수
+    ID3D11Buffer* m_ConstantBuffer = nullptr;               // 상수 버퍼
+
+    Matrix m_WorldMatrix;                                   // 월드좌표게 공간으로 변환을 위한 행렬
+    Matrix m_ViewMatrix;                                    // 카메라좌표계 공간으로 변환을 위한 행렬
+    Matrix m_ProjectionMatrix;                              // 단위장치좌표계(Normalized Device Coordinate) 공간으로 변환을 위한 행렬
 
     virtual bool Initialize(UINT width, UINT height);
     virtual void Update();
