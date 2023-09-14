@@ -64,7 +64,7 @@ public:
     float m_CameraNear;
     float m_CameraFar;
 
-    std::vector<Matrix> m_CubeMatrix;
+    std::vector<Vector3> m_CubeMatrix;
 
     XMVECTOR m_Eye;
     XMVECTOR m_At;
