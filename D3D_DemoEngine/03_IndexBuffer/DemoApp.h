@@ -2,7 +2,7 @@
 #include <d3d11.h>
 #include "../Common/GameApp.h"
 #include <directxtk/SimpleMath.h>
-#include <imgui.h>
+#include <vector>
 
 using namespace DirectX::SimpleMath;
 using namespace DirectX;
@@ -32,16 +32,43 @@ public:
     int m_Indices = 0;                                      // 인덱스 개수
     ID3D11Buffer* m_ConstantBuffer = nullptr;               // 상수 버퍼
 
-    Matrix m_WorldMatrix;                                   // 월드좌표게 공간으로 변환을 위한 행렬
-    Matrix m_WorldMatrix2;                                  // 월드좌표게 공간으로 변환을 위한 행렬
-    Matrix m_WorldMatrix3;                                  // 월드좌표게 공간으로 변환을 위한 행렬
+    Matrix m_WorldMatrix;                                   // 월드좌표계 공간으로 변환을 위한 행렬
+    Matrix m_WorldMatrix2;                                  // 월드좌표계 공간으로 변환을 위한 행렬
+    Matrix m_WorldMatrix3;                                  // 월드좌표계 공간으로 변환을 위한 행렬
     Matrix m_ViewMatrix;                                    // 카메라좌표계 공간으로 변환을 위한 행렬
     Matrix m_ProjectionMatrix;                              // 단위장치좌표계(Normalized Device Coordinate) 공간으로 변환을 위한 행렬
 
-    bool m_IsAnotherWindow = false;
-    bool m_IsDemoWindow = false;
-    float m_SliderValue;
-    int m_Counter;
+    bool m_IsCubePropertiesWindow = false;
+    bool m_IsCameraPropertiesWindow = false;
+
+    float m_ParentWorldXTM;
+    float m_ParentWorldYTM;
+    float m_ParentWorldZTM;
+
+    float m_ChildRelativeXTM1;
+    float m_ChildRelativeYTM1;
+    float m_ChildRelativeZTM1;
+
+    float m_ChildRelativeXTM2;
+    float m_ChildRelativeYTM2;
+    float m_ChildRelativeZTM2;
+
+    float m_CameraWorldXTM;
+    float m_CameraWorldYTM;
+    float m_CameraWorldZTM;
+
+    float m_CameraFovXTM;
+    float m_CameraFovYTM;
+    float m_CameraFovZTM;
+
+    float m_CameraNear;
+    float m_CameraFar;
+
+    std::vector<Matrix> m_CubeMatrix;
+
+    XMVECTOR m_Eye;
+    XMVECTOR m_At;
+    XMVECTOR m_Up;
 
     float m_InitColor[4] = { 0.8f, 1.0f, 1.0f, 1.0f };
 

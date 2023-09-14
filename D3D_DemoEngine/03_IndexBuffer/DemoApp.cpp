@@ -48,6 +48,9 @@ bool DemoApp::Initialize(UINT width, UINT height)
     if (!InitD3D())
         return false;
 
+    if (!InitImGUI())
+        return false;
+
     if (!InitScene())
         return false;
 
@@ -65,7 +68,7 @@ void DemoApp::Update()
 
     // 두번째 큐브 : 첫번째 큐브를 중심으로 Y축으로 돌기
     //XMMATRIX mSpin = XMMatrixRotationZ(-t);
-    XMMATRIX mOrbit = XMMatrixRotationY(-t * 1.2f);
+    XMMATRIX mOrbit = XMMatrixRotationY(-t * 1.5f);
     XMMATRIX mTranslate = XMMatrixTranslation(-4.0f, 0.0f, 0.0f);
     XMMATRIX mScale = XMMatrixScaling(0.3f, 0.3f, 0.3f);
 
@@ -75,7 +78,8 @@ void DemoApp::Update()
     XMMATRIX mSpin2 = XMMatrixRotationZ(-t);
     XMMATRIX mOrbit2 = XMMatrixRotationY(-t * 8.0f);
     XMMATRIX mTranslate2 = XMMatrixTranslation(-4.0f, 0.0f, 0.0f);
-    XMMATRIX mScale2 = XMMatrixScaling(0.3f, 0.3f, 0.3f);
+    XMMATRIX mScale2 = XMMatrixScaling(0.5f, 0.5f, 0.5f);
+    
 
     m_WorldMatrix3 = mScale2 * mSpin2 * mTranslate2 * mOrbit2 * (mScale * mTranslate * mOrbit); // 스케일 적용 -> R(제자리 Y회전) -> 왼쪽으로 이동 -> 궤도 회전
 } 
@@ -97,24 +101,81 @@ void DemoApp::Render()
     ImGui_ImplWin32_NewFrame();
     ImGui::NewFrame();
 
-    // 1. 데모 윈도우 보이기
-    if (m_IsDemoWindow)
-        ImGui::ShowDemoWindow(&m_IsDemoWindow);
+    // 1. 큐브 설정 윈도우
+    ImGui::Begin("Cube Properties");
 
-    // 2. 커스텀한 윈도우 보이기
-    ImGui::Begin("ImGUI Custom Window");
-    ImGui::Text("Display Custom Text");
-    ImGui::Checkbox("Demo Window", &m_IsDemoWindow);
-    ImGui::Checkbox("Another Window", &m_IsAnotherWindow);
+    ImGui::Text("Parent Mesh World Transform");
+    ImGui::Text("X");
+    ImGui::SameLine();
+    ImGui::SliderFloat("##px", &m_ParentWorldXTM, 0.0f, 1.0f);
+    ImGui::Text("Y");
+    ImGui::SameLine();
+    ImGui::SliderFloat("##py", &m_ParentWorldYTM, 0.0f, 1.0f);
+    ImGui::Text("Z");
+    ImGui::SameLine();
+    ImGui::SliderFloat("##pz", &m_ParentWorldZTM, 0.0f, 1.0f);
 
+    ImGui::Text("Child1 World Transform");
+    ImGui::Text("X");
+    ImGui::SameLine();
+    ImGui::SliderFloat("##cx1", &m_ChildRelativeXTM1, 0.0f, 1.0f);
+    ImGui::Text("Y");
+    ImGui::SameLine();
+    ImGui::SliderFloat("##cy1", &m_ChildRelativeYTM1, 0.0f, 1.0f);
+    ImGui::Text("Z");
+    ImGui::SameLine();
+    ImGui::SliderFloat("##cz1", &m_ChildRelativeZTM1, 0.0f, 1.0f);
+
+    ImGui::Text("Child2 World Transform");
+    ImGui::Text("X");
+    ImGui::SameLine();
+    ImGui::SliderFloat("##cx2", &m_ChildRelativeXTM2, 0.0f, 1.0f);
+    ImGui::Text("Y");
+    ImGui::SameLine();
+    ImGui::SliderFloat("##cy2", &m_ChildRelativeYTM2, 0.0f, 1.0f);
+    ImGui::Text("Z");
+    ImGui::SameLine();
+    ImGui::SliderFloat("##cz3", &m_ChildRelativeZTM2, 0.0f, 1.0f);
+
+    ImGui::End();
     
+    // 2. 카메라 설정 윈도우
+    ImGui::Begin("Camera Properties");
 
+    ImGui::Text("Camera World Transform");
+    ImGui::Text("X");
+    ImGui::SameLine();
+    ImGui::SliderFloat("##cwx", &m_CameraWorldXTM, 0.0f, 1.0f);
+    ImGui::Text("Y");
+    ImGui::SameLine();
+    ImGui::SliderFloat("##cwy", &m_CameraWorldYTM, 0.0f, 1.0f);
+    ImGui::Text("Z");
+    ImGui::SameLine();
+    ImGui::SliderFloat("##cwz", &m_CameraWorldZTM, 0.0f, 1.0f);
 
+    ImGui::Text("Camera FOV Degree");
+    ImGui::Text("X Angle");
+    ImGui::SameLine();
+    ImGui::SliderFloat("##cfx", &m_CameraFovXTM, 0.0f, 1.0f);
+    ImGui::Text("Y Angle");
+    ImGui::SameLine();
+    ImGui::SliderFloat("##cfy", &m_CameraFovYTM, 0.0f, 1.0f);
+    ImGui::Text("Z Angle");
+    ImGui::SameLine();
+    ImGui::SliderFloat("##cfz", &m_CameraFovZTM, 0.0f, 1.0f);
 
+    ImGui::Text("Camera Near / Far");
+    ImGui::Text("Near");
+    ImGui::SameLine();
+    ImGui::SliderFloat("##cn", &m_CameraNear, 0.0f, 1.0f);
+    ImGui::Text("Far ");
+    ImGui::SameLine();
+    ImGui::SliderFloat("##cf", &m_CameraFar, 0.0f, 1.0f);
 
+    ImGui::End();
 
-
-
+    ImGui::Render();
+    ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
 
     // Draw 계열 함수를 호출하기 전에 렌더링 파이프라인에 필수 스테이지 설정을 해야한다.
     m_DeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST); // 정점을 이어서 그릴 방식 설정
@@ -259,7 +320,7 @@ bool DemoApp::InitScene()
     // 1. Render() 에서 파이프라인에 바인딩할 버텍스 버퍼 및 버퍼 정보 준비
 
     // 정육면체
-    Vertex vertices[] =
+    /*Vertex vertices[] =
     {
         Vertex(Vector3(-1.0f, 1.0f, -1.0f), Vector4(1.0f, 0.0f, 0.0f, 1.0f)),
         Vertex(Vector3(1.0f, 1.0f, -1.0f), Vector4(0.0f, 1.0f, 0.0f, 1.0f)),
@@ -269,10 +330,10 @@ bool DemoApp::InitScene()
         Vertex(Vector3(1.0f, -1.0f, -1.0f), Vector4(0.1f, 0.1f, 1.0f, 1.0f)),
         Vertex(Vector3(1.0f, -1.0f, 1.0f), Vector4(1.0f, 0.0f, 1.0f, 1.0f)),
         Vertex(Vector3(-1.0f, -1.0f, 1.0f), Vector4(0.0f, 1.0f, 0.0f, 1.0f))
-    };
+    };*/
 
     // 삼각기둥
-    /*Vertex vertices[] =
+    Vertex vertices[] =
     {
         Vertex(Vector3(-1.0f, 1.0f, -1.0f), Vector4(1.0f, 0.0f, 0.0f, 1.0f)),
         Vertex(Vector3(1.0f, 1.0f, -1.0f), Vector4(1.0f, 0.0f, 1.0f, 1.0f)),
@@ -280,8 +341,7 @@ bool DemoApp::InitScene()
         Vertex(Vector3(-1.0f, -1.0f, -1.0f), Vector4(1.0f, 0.0f, 1.0f, 1.0f)),
         Vertex(Vector3(1.0f, -1.0f, -1.0f), Vector4(1.0f, 0.0f, 0.0f, 1.0f)),
         Vertex(Vector3(0.0f, -1.0f, 1.0f), Vector4(0.0f, 0.0f, 1.0f, 1.0f))
-
-    };*/
+    };
 
     // 삼각뿔
     /*Vertex vertices[] =
@@ -336,7 +396,7 @@ bool DemoApp::InitScene()
     // 4. Render() 에서 파이프라인에 바인딩할 인덱스 버퍼 생성
 
     // 정육면체
-    WORD indices[] =
+    /*WORD indices[] =
     {
         3,1,0, 2,1,3,
         0,5,4, 1,5,0,
@@ -344,10 +404,10 @@ bool DemoApp::InitScene()
         1,6,5, 2,6,1,
         2,7,6, 3,7,2,
         6,4,5, 7,4,6,
-    };
+    };*/
 
     // 삼각기둥
-    /*WORD indices[] =
+    WORD indices[] =
     {
         0,2,1,
         3,4,5,
@@ -357,7 +417,7 @@ bool DemoApp::InitScene()
         1,4,0,
         1,5,4,
         2,5,1
-    };*/
+    };
 
     // 삼각뿔
     /*WORD indices[] =
@@ -404,12 +464,17 @@ bool DemoApp::InitScene()
     m_WorldMatrix2 = XMMatrixIdentity();
     m_WorldMatrix3 = XMMatrixIdentity();
 
-    // Initialize the view matrix
-    XMVECTOR Eye = XMVectorSet(0.0f, 1.0f, -5.0f, 0.0f);
-    XMVECTOR At = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
-    XMVECTOR Up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
+    // 큐브 트랜스폼을 벡터에 추가
+    m_CubeMatrix.push_back(m_WorldMatrix);
+    m_CubeMatrix.push_back(m_WorldMatrix2);
+    m_CubeMatrix.push_back(m_WorldMatrix3);
 
-    m_ViewMatrix = XMMatrixLookAtLH(Eye, At, Up);
+    // Initialize the view matrix
+    m_Eye = XMVectorSet(0.0f, 1.0f, -5.0f, 0.0f);
+    m_At = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
+    m_Up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
+
+    m_ViewMatrix = XMMatrixLookAtLH(m_Eye, m_At, m_Up);
 
     // Initialize the projection matrix
     m_ProjectionMatrix = XMMatrixPerspectiveFovLH(XM_PIDIV2, m_ClientWidth / (FLOAT)m_ClientHeight, 0.01f, 100.0f);
@@ -429,14 +494,30 @@ void DemoApp::UnInitScene()
 
 bool DemoApp::InitImGUI()
 {
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+
+    ImGui::StyleColorsDark();
+    //ImGui::StyleColorsLight();
+
+    ImGui_ImplWin32_Init(m_hWnd);
+    ImGui_ImplDX11_Init(m_Device, m_DeviceContext);
+
     return true;
 }
 
 void DemoApp::UnInitImGUI()
 {
+    ImGui_ImplDX11_Shutdown();
+    ImGui_ImplWin32_Shutdown();
+    ImGui::DestroyContext();
 }
+
+extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 LRESULT DemoApp::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    return GameApp::WndProc(hWnd, message, wParam, lParam);
+    if (ImGui_ImplWin32_WndProcHandler(hWnd, message, wParam, lParam))
+        return true;
+    return __super::WndProc(hWnd, message, wParam, lParam);
 }
