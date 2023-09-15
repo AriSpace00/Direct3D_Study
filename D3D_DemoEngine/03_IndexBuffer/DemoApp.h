@@ -57,9 +57,7 @@ public:
     float m_CameraWorldYTM;
     float m_CameraWorldZTM;
 
-    float m_CameraFovXTM;
-    float m_CameraFovYTM;
-    float m_CameraFovZTM;
+    float m_CameraFovYRadius;
 
     float m_CameraNear;
     float m_CameraFar;

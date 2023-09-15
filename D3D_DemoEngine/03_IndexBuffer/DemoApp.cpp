@@ -31,7 +31,11 @@ struct ConstantBuffer
 
 DemoApp::DemoApp(HINSTANCE hInstance)
     : GameApp(hInstance)
+    , m_CameraNear(0.01f)
+    , m_CameraFar(100.0f)
+    , m_CameraFovYRadius(90.0f)
 {
+    
 }
 
 DemoApp::~DemoApp()
@@ -64,30 +68,30 @@ void DemoApp::Update()
     float t = GameTimer::m_Instance->TotalTime();
 
     // 첫번째 큐브: Y축으로 돌기
-    m_WorldMatrix = XMMatrixRotationY(t);
+    Matrix mSpin = XMMatrixRotationY(t);
+    Matrix mTranslate = XMMatrixTranslation(m_CubeMatrix[0].x + m_ParentWorldXTM, m_CubeMatrix[0].y + m_ParentWorldYTM, m_CubeMatrix[0].z + m_ParentWorldZTM);
+    m_WorldMatrix = mSpin * mTranslate;
 
     // 두번째 큐브 : 첫번째 큐브를 중심으로 Y축으로 돌기
-    //XMMATRIX mSpin = XMMatrixRotationZ(-t);
-    XMMATRIX mOrbit = XMMatrixRotationY(-t * 1.5f);
-    XMMATRIX mTranslate = XMMatrixTranslation(-4.0f, 0.0f, 0.0f);
-    XMMATRIX mScale = XMMatrixScaling(0.3f, 0.3f, 0.3f);
+    Matrix mSpin1 = XMMatrixRotationX(-t);
+    Matrix mOrbit1 = XMMatrixRotationY(-t * 1.5f);
+    Matrix mTranslate1 = XMMatrixTranslation(m_CubeMatrix[1].x + m_ChildRelativeXTM1, m_CubeMatrix[1].y + m_ChildRelativeYTM1, m_CubeMatrix[1].z + m_ChildRelativeZTM1);
+    Matrix mScale1 = XMMatrixScaling(0.3f, 0.3f, 0.3f);
 
-    m_WorldMatrix2 = mScale * mTranslate * mOrbit; // 스케일 적용 -> R(제자리 Y회전) -> 왼쪽으로 이동 -> 궤도 회전
+    m_WorldMatrix2 = mScale1 * mSpin1 * mTranslate1 * mOrbit1 * m_WorldMatrix; // 스케일 적용 -> R(제자리 Y회전) -> 왼쪽으로 이동 -> 궤도 회전
 
     // 세번째 큐브 : 두번째 큐브를 중심으로 Y축으로 돌기
-    XMMATRIX mSpin2 = XMMatrixRotationZ(-t);
-    XMMATRIX mOrbit2 = XMMatrixRotationY(-t * 8.0f);
-    XMMATRIX mTranslate2 = XMMatrixTranslation(-4.0f, 0.0f, 0.0f);
-    XMMATRIX mScale2 = XMMatrixScaling(0.5f, 0.5f, 0.5f);
-    
+    Matrix mSpin2 = XMMatrixRotationZ(-t);
+    Matrix mOrbit2 = XMMatrixRotationY(-t * 8.0f);
+    Matrix mTranslate2 = XMMatrixTranslation(m_CubeMatrix[2].x + m_ChildRelativeXTM2, m_CubeMatrix[2].y + m_ChildRelativeYTM2, m_CubeMatrix[2].z + m_ChildRelativeZTM2);
+    Matrix mScale2 = XMMatrixScaling(0.5f, 0.5f, 0.5f);
 
-    m_WorldMatrix3 = mScale2 * mSpin2 * mTranslate2 * mOrbit2 * (mScale * mTranslate * mOrbit); // 스케일 적용 -> R(제자리 Y회전) -> 왼쪽으로 이동 -> 궤도 회전
-} 
+    m_WorldMatrix3 = mScale2 * mSpin2 * mTranslate2 * mOrbit2 * m_WorldMatrix2; // 스케일 적용 -> R(제자리 Y회전) -> 왼쪽으로 이동 -> 궤도 회전
+
+}
 
 void DemoApp::Render()
 {
-    m_DeviceContext->OMSetRenderTargets(1, &m_RenderTargetView, nullptr);
-
     // 화면 칠하기
     m_DeviceContext->ClearRenderTargetView(m_RenderTargetView, m_InitColor);
     m_DeviceContext->ClearDepthStencilView(m_DepthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0);
@@ -102,77 +106,87 @@ void DemoApp::Render()
     ImGui::NewFrame();
 
     // 1. 큐브 설정 윈도우
-    ImGui::Begin("Cube Properties");
+    ImGui::SetNextWindowSize(ImVec2(250, 300));
+    ImGui::SetNextWindowPos(ImVec2(0, 0));
+    {
+        ImGui::Begin("Cube Properties");
 
-    ImGui::Text("Parent Mesh World Transform");
-    ImGui::Text("X");
-    ImGui::SameLine();
-    ImGui::SliderFloat("##px", &m_ParentWorldXTM, 0.0f, 1.0f);
-    ImGui::Text("Y");
-    ImGui::SameLine();
-    ImGui::SliderFloat("##py", &m_ParentWorldYTM, 0.0f, 1.0f);
-    ImGui::Text("Z");
-    ImGui::SameLine();
-    ImGui::SliderFloat("##pz", &m_ParentWorldZTM, 0.0f, 1.0f);
+        ImGui::Text("Parent Mesh World Transform");
+        ImGui::Text("X");
+        ImGui::SameLine();
+        ImGui::SliderFloat("##px", &m_ParentWorldXTM, -10.0f, 10.0f);
+        ImGui::Text("Y");
+        ImGui::SameLine();
+        ImGui::SliderFloat("##py", &m_ParentWorldYTM, -10.0f, 10.0f);
+        ImGui::Text("Z");
+        ImGui::SameLine();
+        ImGui::SliderFloat("##pz", &m_ParentWorldZTM, -10.0f, 10.0f);
 
-    ImGui::Text("Child1 World Transform");
-    ImGui::Text("X");
-    ImGui::SameLine();
-    ImGui::SliderFloat("##cx1", &m_ChildRelativeXTM1, 0.0f, 1.0f);
-    ImGui::Text("Y");
-    ImGui::SameLine();
-    ImGui::SliderFloat("##cy1", &m_ChildRelativeYTM1, 0.0f, 1.0f);
-    ImGui::Text("Z");
-    ImGui::SameLine();
-    ImGui::SliderFloat("##cz1", &m_ChildRelativeZTM1, 0.0f, 1.0f);
+        ImGui::Text("Child1 World Transform");
+        ImGui::Text("X");
+        ImGui::SameLine();
+        ImGui::SliderFloat("##cx1", &m_ChildRelativeXTM1, -10.0f, 10.0f);
+        ImGui::Text("Y");
+        ImGui::SameLine();
+        ImGui::SliderFloat("##cy1", &m_ChildRelativeYTM1, -10.0f, 10.0f);
+        ImGui::Text("Z");
+        ImGui::SameLine();
+        ImGui::SliderFloat("##cz1", &m_ChildRelativeZTM1, -10.0f, 10.0f);
 
-    ImGui::Text("Child2 World Transform");
-    ImGui::Text("X");
-    ImGui::SameLine();
-    ImGui::SliderFloat("##cx2", &m_ChildRelativeXTM2, 0.0f, 1.0f);
-    ImGui::Text("Y");
-    ImGui::SameLine();
-    ImGui::SliderFloat("##cy2", &m_ChildRelativeYTM2, 0.0f, 1.0f);
-    ImGui::Text("Z");
-    ImGui::SameLine();
-    ImGui::SliderFloat("##cz3", &m_ChildRelativeZTM2, 0.0f, 1.0f);
+        ImGui::Text("Child2 World Transform");
+        ImGui::Text("X");
+        ImGui::SameLine();
+        ImGui::SliderFloat("##cx2", &m_ChildRelativeXTM2, -10.0f, 10.0f);
+        ImGui::Text("Y");
+        ImGui::SameLine();
+        ImGui::SliderFloat("##cy2", &m_ChildRelativeYTM2, -10.0f, 10.0f);
+        ImGui::Text("Z");
+        ImGui::SameLine();
+        ImGui::SliderFloat("##cz3", &m_ChildRelativeZTM2, -10.0f, 10.0f);
 
-    ImGui::End();
-    
+        ImGui::End();
+    }
+
     // 2. 카메라 설정 윈도우
-    ImGui::Begin("Camera Properties");
+    ImGui::SetNextWindowSize(ImVec2(250, 300));
+    ImGui::SetNextWindowPos(ImVec2(0, 300));
+    {
+        ImGui::Begin("Camera Properties");
 
-    ImGui::Text("Camera World Transform");
-    ImGui::Text("X");
-    ImGui::SameLine();
-    ImGui::SliderFloat("##cwx", &m_CameraWorldXTM, 0.0f, 1.0f);
-    ImGui::Text("Y");
-    ImGui::SameLine();
-    ImGui::SliderFloat("##cwy", &m_CameraWorldYTM, 0.0f, 1.0f);
-    ImGui::Text("Z");
-    ImGui::SameLine();
-    ImGui::SliderFloat("##cwz", &m_CameraWorldZTM, 0.0f, 1.0f);
+        ImGui::Text("Camera World Transform");
+        float x = XMVectorGetX(m_Eye);
+        float y = XMVectorGetY(m_Eye);
+        float z = XMVectorGetZ(m_Eye);
+        ImGui::Text("X");
+        ImGui::SameLine();
+        ImGui::SliderFloat("##cwx", &x, -10.0f, 10.0f);
+        ImGui::Text("Y");
+        ImGui::SameLine();
+        ImGui::SliderFloat("##cwy", &y, -10.0f, 10.0f);
+        ImGui::Text("Z");
+        ImGui::SameLine();
+        ImGui::SliderFloat("##cwz", &z, -10.0f, 10.0f);
+        m_Eye = DirectX::XMVectorSet(x, y, z, 0.0f);
+        m_ViewMatrix = XMMatrixLookAtLH(m_Eye, m_At, m_Up);
 
-    ImGui::Text("Camera FOV Degree");
-    ImGui::Text("X Angle");
-    ImGui::SameLine();
-    ImGui::SliderFloat("##cfx", &m_CameraFovXTM, 0.0f, 1.0f);
-    ImGui::Text("Y Angle");
-    ImGui::SameLine();
-    ImGui::SliderFloat("##cfy", &m_CameraFovYTM, 0.0f, 1.0f);
-    ImGui::Text("Z Angle");
-    ImGui::SameLine();
-    ImGui::SliderFloat("##cfz", &m_CameraFovZTM, 0.0f, 1.0f);
+        ImGui::Text("Camera FOV Degree");
+        ImGui::Text("Y");
+        ImGui::SameLine();
+        ImGui::SliderFloat("##cfx", &m_CameraFovYRadius, 0.01f, 180.0f);
+        float fovRadius = m_CameraFovYRadius * (DirectX::XM_PI / 180.0f);
 
-    ImGui::Text("Camera Near / Far");
-    ImGui::Text("Near");
-    ImGui::SameLine();
-    ImGui::SliderFloat("##cn", &m_CameraNear, 0.0f, 1.0f);
-    ImGui::Text("Far ");
-    ImGui::SameLine();
-    ImGui::SliderFloat("##cf", &m_CameraFar, 0.0f, 1.0f);
+        ImGui::Text("Camera Near / Far");
+        ImGui::Text("Near");
+        ImGui::SameLine();
+        ImGui::SliderFloat("##cn", &m_CameraNear, 0.01f, 99.9f);
+        ImGui::Text("Far ");
+        ImGui::SameLine();
+        ImGui::SliderFloat("##cf", &m_CameraFar, 0.01f, 99.9f);
+        m_ProjectionMatrix = XMMatrixPerspectiveFovLH(fovRadius, m_ClientWidth / (FLOAT)m_ClientHeight, m_CameraNear, m_CameraFar);
 
-    ImGui::End();
+        ImGui::End();
+    }
+   
 
     ImGui::Render();
     ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
@@ -465,9 +479,9 @@ bool DemoApp::InitScene()
     m_WorldMatrix3 = XMMatrixIdentity();
 
     // 큐브 트랜스폼을 벡터에 추가
-    m_CubeMatrix.push_back(m_WorldMatrix);
-    m_CubeMatrix.push_back(m_WorldMatrix2);
-    m_CubeMatrix.push_back(m_WorldMatrix3);
+    m_CubeMatrix.push_back(Vector3{ 0.0f, 0.0f, 0.0f });
+    m_CubeMatrix.push_back(Vector3{ -4.0f, 0.0f, 0.0f });
+    m_CubeMatrix.push_back(Vector3{ -4.0f, 0.0f, 0.0f });
 
     // Initialize the view matrix
     m_Eye = XMVectorSet(0.0f, 1.0f, -5.0f, 0.0f);
