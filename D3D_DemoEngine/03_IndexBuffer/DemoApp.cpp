@@ -182,7 +182,10 @@ void DemoApp::Render()
         ImGui::Text("Far ");
         ImGui::SameLine();
         ImGui::SliderFloat("##cf", &m_CameraFar, 0.01f, 99.9f);
-        m_ProjectionMatrix = XMMatrixPerspectiveFovLH(fovRadius, m_ClientWidth / (FLOAT)m_ClientHeight, m_CameraNear, m_CameraFar);
+        if(m_CameraNear < m_CameraFar)
+        {
+            m_ProjectionMatrix = XMMatrixPerspectiveFovLH(fovRadius, m_ClientWidth / (FLOAT)m_ClientHeight, m_CameraNear, m_CameraFar);
+        }
 
         ImGui::End();
     }
