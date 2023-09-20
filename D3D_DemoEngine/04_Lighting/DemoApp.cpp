@@ -13,13 +13,8 @@ using namespace DirectX::SimpleMath;
 
 struct Vertex
 {
-    Vector3 position;   // 정점 위치 정보
-    Vector4 color;      // 정점 색상 정보
-
-    Vertex(float x, float y, float z) : position(x, y, z) {}
-    Vertex(Vector3 position) : position(position) {}
-
-    Vertex(Vector3 position, Vector4 color) : position(position), color(color) {}
+    Vector3 Pos;
+    Vector3 Normal;
 };
 
 struct ConstantBuffer
@@ -27,6 +22,10 @@ struct ConstantBuffer
     Matrix WorldMatrix;
     Matrix ViewMatrix;
     Matrix ProjectionMatrix;
+
+    Vector4 vLightDir[2];
+    Vector4 vLightColor[2];
+    Vector4 vOutputColor;
 };
 
 DemoApp::DemoApp(HINSTANCE hInstance)
@@ -35,7 +34,7 @@ DemoApp::DemoApp(HINSTANCE hInstance)
     , m_CameraFar(100.0f)
     , m_CameraFovYRadius(90.0f)
 {
-    
+
 }
 
 DemoApp::~DemoApp()
@@ -71,12 +70,18 @@ void DemoApp::Update()
     Matrix mSpin = XMMatrixRotationY(t);
     Matrix mTranslate = XMMatrixTranslation(m_CubeMatrix[0].x + m_ParentWorldXTM, m_CubeMatrix[0].y + m_ParentWorldYTM, m_CubeMatrix[0].z + m_ParentWorldZTM);
     m_WorldMatrix = mSpin * mTranslate;
+    m_LightDirsEvaluated[0] = m_InitialLightDirs[0];
 
     // 두번째 큐브 : 첫번째 큐브를 중심으로 Y축으로 돌기
     Matrix mSpin1 = XMMatrixRotationX(-t);
     Matrix mOrbit1 = XMMatrixRotationY(-t * 1.5f);
     Matrix mTranslate1 = XMMatrixTranslation(m_CubeMatrix[1].x + m_ChildRelativeXTM1, m_CubeMatrix[1].y + m_ChildRelativeYTM1, m_CubeMatrix[1].z + m_ChildRelativeZTM1);
     Matrix mScale1 = XMMatrixScaling(0.3f, 0.3f, 0.3f);
+
+    // 두번째 큐브를 라이트로 설정
+    /*XMVECTOR vLightDir = XMLoadFloat4(&m_InitialLightDirs[1]);
+    vLightDir = XMVector3Transform(vLightDir, mSpin1);
+    XMStoreFloat4(&m_LightDirsEvaluated[1], vLightDir);*/
 
     m_WorldMatrix2 = mScale1 * mSpin1 * mTranslate1 * mOrbit1 * m_WorldMatrix; // 스케일 적용 -> R(제자리 Y회전) -> 왼쪽으로 이동 -> 궤도 회전
 
@@ -87,7 +92,6 @@ void DemoApp::Update()
     Matrix mScale2 = XMMatrixScaling(0.5f, 0.5f, 0.5f);
 
     m_WorldMatrix3 = mScale2 * mSpin2 * mTranslate2 * mOrbit2 * m_WorldMatrix2; // 스케일 적용 -> R(제자리 Y회전) -> 왼쪽으로 이동 -> 궤도 회전
-
 }
 
 void DemoApp::Render()
@@ -182,14 +186,13 @@ void DemoApp::Render()
         ImGui::Text("Far ");
         ImGui::SameLine();
         ImGui::SliderFloat("##cf", &m_CameraFar, 0.01f, 99.9f);
-        if(m_CameraNear < m_CameraFar)
+        if (m_CameraNear < m_CameraFar)
         {
             m_ProjectionMatrix = XMMatrixPerspectiveFovLH(fovRadius, m_ClientWidth / (FLOAT)m_ClientHeight, m_CameraNear, m_CameraFar);
         }
 
         ImGui::End();
     }
-   
 
     ImGui::Render();
     ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
@@ -202,12 +205,18 @@ void DemoApp::Render()
     m_DeviceContext->VSSetShader(m_VertexShader, nullptr, 0);
     m_DeviceContext->VSSetConstantBuffers(0, 1, &m_ConstantBuffer);
     m_DeviceContext->PSSetShader(m_PixelShader, nullptr, 0);
+    m_DeviceContext->PSSetConstantBuffers(0, 1, &m_ConstantBuffer);
 
     // 첫번째 큐브 상수 버퍼 설정
     ConstantBuffer cb1;
     cb1.WorldMatrix = XMMatrixTranspose(m_WorldMatrix);
     cb1.ViewMatrix = XMMatrixTranspose(m_ViewMatrix);
     cb1.ProjectionMatrix = XMMatrixTranspose(m_ProjectionMatrix);
+    cb1.vLightDir[0] = m_LightDirsEvaluated[0];
+    cb1.vLightDir[1] = m_LightDirsEvaluated[1];
+    cb1.vLightColor[0] = m_LightColors[0];
+    cb1.vLightColor[1] = m_LightColors[1];
+    cb1.vOutputColor = XMFLOAT4(0.0f, 0.0f, 0.0f, 0.0f);
     m_DeviceContext->UpdateSubresource(m_ConstantBuffer, 0, nullptr, &cb1, 0, 0);
 
     // 출력하기
@@ -221,7 +230,7 @@ void DemoApp::Render()
     m_DeviceContext->UpdateSubresource(m_ConstantBuffer, 0, nullptr, &cb2, 0, 0);
 
     // 출력하기
-    m_DeviceContext->DrawIndexed(m_Indices, 0, 0);
+    //m_DeviceContext->DrawIndexed(m_Indices, 0, 0);
 
     // 세번째 큐브 상수 버퍼 설정
     ConstantBuffer cb3;
@@ -231,7 +240,22 @@ void DemoApp::Render()
     m_DeviceContext->UpdateSubresource(m_ConstantBuffer, 0, nullptr, &cb3, 0, 0);
 
     // 출력하기
-    m_DeviceContext->DrawIndexed(m_Indices, 0, 0);
+    //m_DeviceContext->DrawIndexed(m_Indices, 0, 0);
+
+    // 라이팅 렌더
+    for (int m = 0; m < 2; m++)
+    {
+        XMMATRIX mLight = XMMatrixTranslationFromVector(5.0f * XMLoadFloat4(&m_LightDirsEvaluated[m]));
+        XMMATRIX mLightScale = XMMatrixScaling(0.2f, 0.2f, 0.2f);
+        mLight = mLightScale * mLight;
+
+        // 현재 라이트를 적용
+        cb1.WorldMatrix = XMMatrixTranspose(mLight);
+        cb1.vOutputColor = m_LightColors[m];
+        m_DeviceContext->UpdateSubresource(m_ConstantBuffer, 0, nullptr, &cb1, 0, 0);
+        m_DeviceContext->PSSetShader(m_PixelShaderSolid, nullptr, 0);
+        m_DeviceContext->DrawIndexed(m_Indices, 0, 0);
+    }
 
     // 현재 백 버퍼에서 렌더된 정보를 프론트 버퍼에(스크린) 전달
     m_SwapChain->Present(0, 0);
@@ -337,20 +361,47 @@ bool DemoApp::InitScene()
     // 1. Render() 에서 파이프라인에 바인딩할 버텍스 버퍼 및 버퍼 정보 준비
 
     // 정육면체
-    /*Vertex vertices[] =
+    Vertex vertices[] =
     {
-        Vertex(Vector3(-1.0f, 1.0f, -1.0f), Vector4(1.0f, 0.0f, 0.0f, 1.0f)),
-        Vertex(Vector3(1.0f, 1.0f, -1.0f), Vector4(0.0f, 1.0f, 0.0f, 1.0f)),
-        Vertex(Vector3(1.0f, 1.0f, 1.0f), Vector4(1.0f, 0.0f, 0.0f, 1.0f)),
-        Vertex(Vector3(-1.0f, 1.0f, 1.0f), Vector4(0.1f, 0.1f, 1.0f, 1.0f)),
-        Vertex(Vector3(-1.0f, -1.0f, -1.0f), Vector4(1.0f, 0.0f, 1.0f, 1.0f)),
-        Vertex(Vector3(1.0f, -1.0f, -1.0f), Vector4(0.1f, 0.1f, 1.0f, 1.0f)),
-        Vertex(Vector3(1.0f, -1.0f, 1.0f), Vector4(1.0f, 0.0f, 1.0f, 1.0f)),
-        Vertex(Vector3(-1.0f, -1.0f, 1.0f), Vector4(0.0f, 1.0f, 0.0f, 1.0f))
-    };*/
+        // 윗면 Normal Y +
+        {Vector3(-1.0f, 1.0f, -1.0f), Vector3(0.0f, 1.0f, 0.0f)},
+        {Vector3(1.0f, 1.0f, -1.0f), Vector3(0.0f, 1.0f, 0.0f)},
+        {Vector3(1.0f, 1.0f, 1.0f), Vector3(0.0f, 1.0f, 0.0f)},
+        {Vector3(-1.0f, 1.0f, 1.0f), Vector3(0.0f, 1.0f, 0.0f)},
+
+        // 밑면 Normal Y -	
+        {Vector3(-1.0f, -1.0f, -1.0f), Vector3(0.0f, -1.0f, 0.0f)},
+        {Vector3(1.0f, -1.0f, -1.0f), Vector3(0.0f, -1.0f, 0.0f)},
+        {Vector3(1.0f, -1.0f, 1.0f), Vector3(0.0f, -1.0f, 0.0f)},
+        {Vector3(-1.0f, -1.0f, 1.0f), Vector3(0.0f, -1.0f, 0.0f)},
+
+        // 왼쪽면 Normal X -
+        {Vector3(-1.0f, -1.0f, 1.0f), Vector3(-1.0f, 0.0f, 0.0f)},
+        {Vector3(-1.0f, -1.0f, -1.0f), Vector3(-1.0f, 0.0f, 0.0f)},
+        {Vector3(-1.0f, 1.0f, -1.0f), Vector3(-1.0f, 0.0f, 0.0f)},
+        {Vector3(-1.0f, 1.0f, 1.0f), Vector3(-1.0f, 0.0f, 0.0f)},
+
+        // 오른쪽면 Normal X +
+        {Vector3(1.0f, -1.0f, 1.0f), Vector3(1.0f, 0.0f, 0.0f)},
+        {Vector3(1.0f, -1.0f, -1.0f), Vector3(1.0f, 0.0f, 0.0f)},
+        {Vector3(1.0f, 1.0f, -1.0f), Vector3(1.0f, 0.0f, 0.0f)},
+        {Vector3(1.0f, 1.0f, 1.0f), Vector3(1.0f, 0.0f, 0.0f)},
+
+        // 앞면 Normal Z -
+        {Vector3(-1.0f, -1.0f, -1.0f), Vector3(0.0f, 0.0f, -1.0f)},
+        {Vector3(1.0f, -1.0f, -1.0f), Vector3(0.0f, 0.0f, -1.0f)},
+        {Vector3(1.0f, 1.0f, -1.0f), Vector3(0.0f, 0.0f, -1.0f)},
+        {Vector3(-1.0f, 1.0f, -1.0f), Vector3(0.0f, 0.0f, -1.0f)},
+
+        // 뒷면 Normal Z +
+        {Vector3(-1.0f, -1.0f, 1.0f), Vector3(0.0f, 0.0f, 1.0f)},
+        {Vector3(1.0f, -1.0f, 1.0f), Vector3(0.0f, 0.0f, 1.0f)},
+        {Vector3(-1.0f, -1.0f, -1.0f), Vector3(0.0f, 0.0f, 1.0f)},
+        {Vector3(-1.0f, 1.0f, 1.0f), Vector3(0.0f, 0.0f, 1.0f)}
+    };
 
     // 삼각기둥
-    Vertex vertices[] =
+    /*Vertex vertices[] =
     {
         Vertex(Vector3(-1.0f, 1.0f, -1.0f), Vector4(1.0f, 0.0f, 0.0f, 1.0f)),
         Vertex(Vector3(1.0f, 1.0f, -1.0f), Vector4(1.0f, 0.0f, 1.0f, 1.0f)),
@@ -358,7 +409,7 @@ bool DemoApp::InitScene()
         Vertex(Vector3(-1.0f, -1.0f, -1.0f), Vector4(1.0f, 0.0f, 1.0f, 1.0f)),
         Vertex(Vector3(1.0f, -1.0f, -1.0f), Vector4(1.0f, 0.0f, 0.0f, 1.0f)),
         Vertex(Vector3(0.0f, -1.0f, 1.0f), Vector4(0.0f, 0.0f, 1.0f, 1.0f))
-    };
+    };*/
 
     // 삼각뿔
     /*Vertex vertices[] =
