@@ -70,18 +70,19 @@ void DemoApp::Update()
     Matrix mSpin = XMMatrixRotationY(t);
     Matrix mTranslate = XMMatrixTranslation(m_CubeMatrix[0].x + m_ParentWorldXTM, m_CubeMatrix[0].y + m_ParentWorldYTM, m_CubeMatrix[0].z + m_ParentWorldZTM);
     m_WorldMatrix = mSpin * mTranslate;
+
+    // Rotate the second light around the origin
     m_LightDirsEvaluated[0] = m_InitialLightDirs[0];
+    /*XMMATRIX mRotate = XMMatrixRotationY(-2.0f * t);
+    XMVECTOR vLightDir = XMLoadFloat4(&m_InitialLightDirs[1]);
+    vLightDir = XMVector3Transform(vLightDir, mRotate);
+    XMStoreFloat4(&m_LightDirsEvaluated[1], vLightDir);*/
 
     // 두번째 큐브 : 첫번째 큐브를 중심으로 Y축으로 돌기
     Matrix mSpin1 = XMMatrixRotationX(-t);
     Matrix mOrbit1 = XMMatrixRotationY(-t * 1.5f);
     Matrix mTranslate1 = XMMatrixTranslation(m_CubeMatrix[1].x + m_ChildRelativeXTM1, m_CubeMatrix[1].y + m_ChildRelativeYTM1, m_CubeMatrix[1].z + m_ChildRelativeZTM1);
     Matrix mScale1 = XMMatrixScaling(0.3f, 0.3f, 0.3f);
-
-    // 두번째 큐브를 라이트로 설정
-    /*XMVECTOR vLightDir = XMLoadFloat4(&m_InitialLightDirs[1]);
-    vLightDir = XMVector3Transform(vLightDir, mSpin1);
-    XMStoreFloat4(&m_LightDirsEvaluated[1], vLightDir);*/
 
     m_WorldMatrix2 = mScale1 * mSpin1 * mTranslate1 * mOrbit1 * m_WorldMatrix; // 스케일 적용 -> R(제자리 Y회전) -> 왼쪽으로 이동 -> 궤도 회전
 
@@ -100,102 +101,105 @@ void DemoApp::Render()
     m_DeviceContext->ClearRenderTargetView(m_RenderTargetView, m_InitColor);
     m_DeviceContext->ClearDepthStencilView(m_DepthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0);
 
-    ImGuiIO& io = ImGui::GetIO(); (void)io;
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;           // 키보드 입력값 받기
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;            // 게임패드 입력값 받기
-
-    // ImGUI 프레임 생성
-    ImGui_ImplDX11_NewFrame();
-    ImGui_ImplWin32_NewFrame();
-    ImGui::NewFrame();
-
-    // 1. 큐브 설정 윈도우
-    ImGui::SetNextWindowSize(ImVec2(250, 300));
-    ImGui::SetNextWindowPos(ImVec2(0, 0));
+    // ImGui
     {
-        ImGui::Begin("Cube Properties");
+        ImGuiIO& io = ImGui::GetIO(); (void)io;
+        io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;           // 키보드 입력값 받기
+        io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;            // 게임패드 입력값 받기
 
-        ImGui::Text("Parent Mesh World Transform");
-        ImGui::Text("X");
-        ImGui::SameLine();
-        ImGui::SliderFloat("##px", &m_ParentWorldXTM, -10.0f, 10.0f);
-        ImGui::Text("Y");
-        ImGui::SameLine();
-        ImGui::SliderFloat("##py", &m_ParentWorldYTM, -10.0f, 10.0f);
-        ImGui::Text("Z");
-        ImGui::SameLine();
-        ImGui::SliderFloat("##pz", &m_ParentWorldZTM, -10.0f, 10.0f);
+        // ImGUI 프레임 생성
+        ImGui_ImplDX11_NewFrame();
+        ImGui_ImplWin32_NewFrame();
+        ImGui::NewFrame();
 
-        ImGui::Text("Child1 World Transform");
-        ImGui::Text("X");
-        ImGui::SameLine();
-        ImGui::SliderFloat("##cx1", &m_ChildRelativeXTM1, -10.0f, 10.0f);
-        ImGui::Text("Y");
-        ImGui::SameLine();
-        ImGui::SliderFloat("##cy1", &m_ChildRelativeYTM1, -10.0f, 10.0f);
-        ImGui::Text("Z");
-        ImGui::SameLine();
-        ImGui::SliderFloat("##cz1", &m_ChildRelativeZTM1, -10.0f, 10.0f);
-
-        ImGui::Text("Child2 World Transform");
-        ImGui::Text("X");
-        ImGui::SameLine();
-        ImGui::SliderFloat("##cx2", &m_ChildRelativeXTM2, -10.0f, 10.0f);
-        ImGui::Text("Y");
-        ImGui::SameLine();
-        ImGui::SliderFloat("##cy2", &m_ChildRelativeYTM2, -10.0f, 10.0f);
-        ImGui::Text("Z");
-        ImGui::SameLine();
-        ImGui::SliderFloat("##cz3", &m_ChildRelativeZTM2, -10.0f, 10.0f);
-
-        ImGui::End();
-    }
-
-    // 2. 카메라 설정 윈도우
-    ImGui::SetNextWindowSize(ImVec2(250, 300));
-    ImGui::SetNextWindowPos(ImVec2(0, 300));
-    {
-        ImGui::Begin("Camera Properties");
-
-        ImGui::Text("Camera World Transform");
-        float x = XMVectorGetX(m_Eye);
-        float y = XMVectorGetY(m_Eye);
-        float z = XMVectorGetZ(m_Eye);
-        ImGui::Text("X");
-        ImGui::SameLine();
-        ImGui::SliderFloat("##cwx", &x, -10.0f, 10.0f);
-        ImGui::Text("Y");
-        ImGui::SameLine();
-        ImGui::SliderFloat("##cwy", &y, -10.0f, 10.0f);
-        ImGui::Text("Z");
-        ImGui::SameLine();
-        ImGui::SliderFloat("##cwz", &z, -10.0f, 10.0f);
-        m_Eye = DirectX::XMVectorSet(x, y, z, 0.0f);
-        m_ViewMatrix = XMMatrixLookToLH(m_Eye, m_At, m_Up);
-
-        ImGui::Text("Camera FOV Degree");
-        ImGui::Text("Y");
-        ImGui::SameLine();
-        ImGui::SliderFloat("##cfx", &m_CameraFovYRadius, 0.01f, 180.0f);
-        float fovRadius = m_CameraFovYRadius * (DirectX::XM_PI / 180.0f);
-
-        ImGui::Text("Camera Near / Far");
-        ImGui::Text("Near");
-        ImGui::SameLine();
-        ImGui::SliderFloat("##cn", &m_CameraNear, 0.01f, 99.9f);
-        ImGui::Text("Far ");
-        ImGui::SameLine();
-        ImGui::SliderFloat("##cf", &m_CameraFar, 0.01f, 99.9f);
-        if (m_CameraNear < m_CameraFar)
+        // 1. 큐브 설정 윈도우
+        ImGui::SetNextWindowSize(ImVec2(250, 300));
+        ImGui::SetNextWindowPos(ImVec2(0, 0));
         {
-            m_ProjectionMatrix = XMMatrixPerspectiveFovLH(fovRadius, m_ClientWidth / (FLOAT)m_ClientHeight, m_CameraNear, m_CameraFar);
+            ImGui::Begin("Cube Properties");
+
+            ImGui::Text("Parent Mesh World Transform");
+            ImGui::Text("X");
+            ImGui::SameLine();
+            ImGui::SliderFloat("##px", &m_ParentWorldXTM, -10.0f, 10.0f);
+            ImGui::Text("Y");
+            ImGui::SameLine();
+            ImGui::SliderFloat("##py", &m_ParentWorldYTM, -10.0f, 10.0f);
+            ImGui::Text("Z");
+            ImGui::SameLine();
+            ImGui::SliderFloat("##pz", &m_ParentWorldZTM, -10.0f, 10.0f);
+
+            ImGui::Text("Child1 World Transform");
+            ImGui::Text("X");
+            ImGui::SameLine();
+            ImGui::SliderFloat("##cx1", &m_ChildRelativeXTM1, -10.0f, 10.0f);
+            ImGui::Text("Y");
+            ImGui::SameLine();
+            ImGui::SliderFloat("##cy1", &m_ChildRelativeYTM1, -10.0f, 10.0f);
+            ImGui::Text("Z");
+            ImGui::SameLine();
+            ImGui::SliderFloat("##cz1", &m_ChildRelativeZTM1, -10.0f, 10.0f);
+
+            ImGui::Text("Child2 World Transform");
+            ImGui::Text("X");
+            ImGui::SameLine();
+            ImGui::SliderFloat("##cx2", &m_ChildRelativeXTM2, -10.0f, 10.0f);
+            ImGui::Text("Y");
+            ImGui::SameLine();
+            ImGui::SliderFloat("##cy2", &m_ChildRelativeYTM2, -10.0f, 10.0f);
+            ImGui::Text("Z");
+            ImGui::SameLine();
+            ImGui::SliderFloat("##cz3", &m_ChildRelativeZTM2, -10.0f, 10.0f);
+
+            ImGui::End();
         }
 
-        ImGui::End();
-    }
+        // 2. 카메라 설정 윈도우
+        ImGui::SetNextWindowSize(ImVec2(250, 300));
+        ImGui::SetNextWindowPos(ImVec2(0, 300));
+        {
+            ImGui::Begin("Camera Properties");
 
-    ImGui::Render();
-    ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
+            ImGui::Text("Camera World Transform");
+            float x = XMVectorGetX(m_Eye);
+            float y = XMVectorGetY(m_Eye);
+            float z = XMVectorGetZ(m_Eye);
+            ImGui::Text("X");
+            ImGui::SameLine();
+            ImGui::SliderFloat("##cwx", &x, -10.0f, 10.0f);
+            ImGui::Text("Y");
+            ImGui::SameLine();
+            ImGui::SliderFloat("##cwy", &y, -10.0f, 10.0f);
+            ImGui::Text("Z");
+            ImGui::SameLine();
+            ImGui::SliderFloat("##cwz", &z, -10.0f, 10.0f);
+            m_Eye = DirectX::XMVectorSet(x, y, z, 0.0f);
+            m_ViewMatrix = XMMatrixLookToLH(m_Eye, m_At, m_Up);
+
+            ImGui::Text("Camera FOV Degree");
+            ImGui::Text("Y");
+            ImGui::SameLine();
+            ImGui::SliderFloat("##cfx", &m_CameraFovYRadius, 0.01f, 180.0f);
+            float fovRadius = m_CameraFovYRadius * (DirectX::XM_PI / 180.0f);
+
+            ImGui::Text("Camera Near / Far");
+            ImGui::Text("Near");
+            ImGui::SameLine();
+            ImGui::SliderFloat("##cn", &m_CameraNear, 0.01f, 99.9f);
+            ImGui::Text("Far ");
+            ImGui::SameLine();
+            ImGui::SliderFloat("##cf", &m_CameraFar, 0.01f, 99.9f);
+            if (m_CameraNear < m_CameraFar)
+            {
+                m_ProjectionMatrix = XMMatrixPerspectiveFovLH(fovRadius, m_ClientWidth / (FLOAT)m_ClientHeight, m_CameraNear, m_CameraFar);
+            }
+
+            ImGui::End();
+        }
+
+        ImGui::Render();
+        ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
+    }
 
     // Draw 계열 함수를 호출하기 전에 렌더링 파이프라인에 필수 스테이지 설정을 해야한다.
     m_DeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST); // 정점을 이어서 그릴 방식 설정
@@ -230,7 +234,7 @@ void DemoApp::Render()
     m_DeviceContext->UpdateSubresource(m_ConstantBuffer, 0, nullptr, &cb2, 0, 0);
 
     // 출력하기
-    //m_DeviceContext->DrawIndexed(m_Indices, 0, 0);
+    m_DeviceContext->DrawIndexed(m_Indices, 0, 0);
 
     // 세번째 큐브 상수 버퍼 설정
     ConstantBuffer cb3;
@@ -240,7 +244,7 @@ void DemoApp::Render()
     m_DeviceContext->UpdateSubresource(m_ConstantBuffer, 0, nullptr, &cb3, 0, 0);
 
     // 출력하기
-    //m_DeviceContext->DrawIndexed(m_Indices, 0, 0);
+    m_DeviceContext->DrawIndexed(m_Indices, 0, 0);
 
     // 라이팅 렌더
     for (int m = 0; m < 2; m++)
@@ -396,29 +400,9 @@ bool DemoApp::InitScene()
         // 뒷면 Normal Z +
         {Vector3(-1.0f, -1.0f, 1.0f), Vector3(0.0f, 0.0f, 1.0f)},
         {Vector3(1.0f, -1.0f, 1.0f), Vector3(0.0f, 0.0f, 1.0f)},
-        {Vector3(-1.0f, -1.0f, -1.0f), Vector3(0.0f, 0.0f, 1.0f)},
+        {Vector3(1.0f, 1.0f, 1.0f), Vector3(0.0f, 0.0f, 1.0f)},
         {Vector3(-1.0f, 1.0f, 1.0f), Vector3(0.0f, 0.0f, 1.0f)}
     };
-
-    // 삼각기둥
-    /*Vertex vertices[] =
-    {
-        Vertex(Vector3(-1.0f, 1.0f, -1.0f), Vector4(1.0f, 0.0f, 0.0f, 1.0f)),
-        Vertex(Vector3(1.0f, 1.0f, -1.0f), Vector4(1.0f, 0.0f, 1.0f, 1.0f)),
-        Vertex(Vector3(0.0f, 1.0f, 1.0f), Vector4(0.0f, 0.0f, 1.0f, 1.0f)),
-        Vertex(Vector3(-1.0f, -1.0f, -1.0f), Vector4(1.0f, 0.0f, 1.0f, 1.0f)),
-        Vertex(Vector3(1.0f, -1.0f, -1.0f), Vector4(1.0f, 0.0f, 0.0f, 1.0f)),
-        Vertex(Vector3(0.0f, -1.0f, 1.0f), Vector4(0.0f, 0.0f, 1.0f, 1.0f))
-    };*/
-
-    // 삼각뿔
-    /*Vertex vertices[] =
-    {
-        Vertex(Vector3(0.0f, 0.5f, (float)((std::sqrt(3)/2) - 1)), Vector4(1.0f, 0.0f, 0.0f, 1.0f)),
-        Vertex(Vector3(-1.0f, -1.0f, -1.0f), Vector4(1.0f, 0.0f, 0.0f, 1.0f)),
-        Vertex(Vector3(1.0f, -1.0f, -1.0f), Vector4(1.0f, 0.0f, 0.0f, 1.0f)),
-        Vertex(Vector3(1.0f, -1.0f, (float)(std::sqrt(3) - 1)), Vector4(1.0f, 0.0f, 0.0f, 1.0f)),
-    };*/
 
     D3D11_BUFFER_DESC bd = {};
     bd.ByteWidth = sizeof(Vertex) * ARRAYSIZE(vertices);
@@ -443,7 +427,7 @@ bool DemoApp::InitScene()
     D3D11_INPUT_ELEMENT_DESC layout[] =
     {
         {"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0},
-        {"COLOR",    0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0}
+        {"NORMAL",    0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0}
     };
 
     ID3DBlob* vertexShaderBuffer = nullptr;
@@ -455,7 +439,7 @@ bool DemoApp::InitScene()
         return false;
     }
 
-    HR_T(hr = m_Device->CreateInputLayout(layout, ARRAYSIZE(layout), vertexShaderBuffer->GetBufferPointer(), vertexShaderBuffer->GetBufferSize(), &m_InputLayout));
+    HR_T(m_Device->CreateInputLayout(layout, ARRAYSIZE(layout), vertexShaderBuffer->GetBufferPointer(), vertexShaderBuffer->GetBufferSize(), &m_InputLayout));
 
     // 3. Render() 에서 파이프라인에 바인딩할 버텍스 셰이더 생성
     HR_T(m_Device->CreateVertexShader(vertexShaderBuffer->GetBufferPointer(), vertexShaderBuffer->GetBufferSize(), NULL, &m_VertexShader));
@@ -464,40 +448,19 @@ bool DemoApp::InitScene()
     // 4. Render() 에서 파이프라인에 바인딩할 인덱스 버퍼 생성
 
     // 정육면체
-    /*WORD indices[] =
-    {
-        3,1,0, 2,1,3,
-        0,5,4, 1,5,0,
-        3,4,7, 0,4,3,
-        1,6,5, 2,6,1,
-        2,7,6, 3,7,2,
-        6,4,5, 7,4,6,
-    };*/
-
-    // 삼각기둥
     WORD indices[] =
     {
-        0,2,1,
-        3,4,5,
-        2,3,5,
-        0,3,2,
-        0,4,3,
-        1,4,0,
-        1,5,4,
-        2,5,1
+        3,1,0, 2,1,3,
+        6,4,5, 7,4,6,
+        11,9,8, 10,9,11,
+        14,12,13, 15,12,14,
+        19,17,16, 18,17,19,
+        22,20,21, 23,20,22
     };
-
-    // 삼각뿔
-    /*WORD indices[] =
-    {
-        1,2,3,
-        0,2,1,
-        0,3,2,
-        0,1,3
-    };*/
 
     m_Indices = ARRAYSIZE(indices);         // 인덱스 개수 저장
 
+    bd = {};
     bd.ByteWidth = sizeof(WORD) * ARRAYSIZE(indices);
     bd.BindFlags = D3D11_BIND_INDEX_BUFFER;
     bd.Usage = D3D11_USAGE_DEFAULT;
@@ -517,6 +480,16 @@ bool DemoApp::InitScene()
         return false;
     }
     HR_T(m_Device->CreatePixelShader(pixelShaderBuffer->GetBufferPointer(), pixelShaderBuffer->GetBufferSize(), NULL, &m_PixelShader));
+    SAFE_RELEASE(pixelShaderBuffer);
+
+    HR_T(CompileShaderFromFile(L"SolidPixelShader.hlsl", "main", "ps_4_0", &pixelShaderBuffer));
+    if (FAILED(hr))
+    {
+        MessageBoxA(m_hWnd, (char*)errorMessage->GetBufferPointer(), "Solid Pixel Shader 생성 오류", MB_OK);
+        SAFE_RELEASE(errorMessage);
+        return false;
+    }
+    HR_T(m_Device->CreatePixelShader(pixelShaderBuffer->GetBufferPointer(), pixelShaderBuffer->GetBufferSize(), NULL, &m_PixelShaderSolid));
     SAFE_RELEASE(pixelShaderBuffer);
 
     // 6. Render() 에서 파이프라인에 바인딩할 상수 버퍼 생성
@@ -545,7 +518,7 @@ bool DemoApp::InitScene()
     m_ViewMatrix = XMMatrixLookToLH(m_Eye, m_At, m_Up);
 
     // Initialize the projection matrix
-    m_ProjectionMatrix = XMMatrixPerspectiveFovLH(XM_PIDIV2, m_ClientWidth / (FLOAT)m_ClientHeight, 0.01f, 100.0f);
+    m_ProjectionMatrix = XMMatrixPerspectiveFovLH(XM_PIDIV4, m_ClientWidth / (FLOAT)m_ClientHeight, 0.01f, 100.0f);
     return true;
 }
 
