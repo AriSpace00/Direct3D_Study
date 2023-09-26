@@ -23,8 +23,8 @@ struct ConstantBuffer
     Matrix ViewMatrix;
     Matrix ProjectionMatrix;
 
-    Vector4 vLightDir[2];
-    Vector4 vLightColor[2];
+    Vector4 vLightDir;
+    Vector4 vLightColor;
     Vector4 vOutputColor;
 };
 
@@ -68,31 +68,15 @@ void DemoApp::Update()
 
     // 첫번째 큐브: Y축으로 돌기
     Matrix mSpin = XMMatrixRotationY(t);
-    Matrix mTranslate = XMMatrixTranslation(m_CubeMatrix[0].x + m_ParentWorldXTM, m_CubeMatrix[0].y + m_ParentWorldYTM, m_CubeMatrix[0].z + m_ParentWorldZTM);
+    Matrix mTranslate = XMMatrixTranslation(m_CubeMatrix.x + m_ParentWorldXTM, m_CubeMatrix.y + m_ParentWorldYTM, m_CubeMatrix.z + m_ParentWorldZTM);
     m_WorldMatrix = mSpin * mTranslate;
 
     // Rotate the second light around the origin
-    m_LightDirsEvaluated[0] = m_InitialLightDirs[0];
-    /*XMMATRIX mRotate = XMMatrixRotationY(-2.0f * t);
-    XMVECTOR vLightDir = XMLoadFloat4(&m_InitialLightDirs[1]);
+    m_LightDirsEvaluated = m_LightDir;
+    XMMATRIX mRotate = XMMatrixRotationY(-2.0f * t);
+    XMVECTOR vLightDir = XMLoadFloat4(&m_LightDir);
     vLightDir = XMVector3Transform(vLightDir, mRotate);
-    XMStoreFloat4(&m_LightDirsEvaluated[1], vLightDir);*/
-
-    // 두번째 큐브 : 첫번째 큐브를 중심으로 Y축으로 돌기
-    Matrix mSpin1 = XMMatrixRotationX(-t);
-    Matrix mOrbit1 = XMMatrixRotationY(-t * 1.5f);
-    Matrix mTranslate1 = XMMatrixTranslation(m_CubeMatrix[1].x + m_ChildRelativeXTM1, m_CubeMatrix[1].y + m_ChildRelativeYTM1, m_CubeMatrix[1].z + m_ChildRelativeZTM1);
-    Matrix mScale1 = XMMatrixScaling(0.3f, 0.3f, 0.3f);
-
-    m_WorldMatrix2 = mScale1 * mSpin1 * mTranslate1 * mOrbit1 * m_WorldMatrix; // 스케일 적용 -> R(제자리 Y회전) -> 왼쪽으로 이동 -> 궤도 회전
-
-    // 세번째 큐브 : 두번째 큐브를 중심으로 Y축으로 돌기
-    Matrix mSpin2 = XMMatrixRotationZ(-t);
-    Matrix mOrbit2 = XMMatrixRotationY(-t * 8.0f);
-    Matrix mTranslate2 = XMMatrixTranslation(m_CubeMatrix[2].x + m_ChildRelativeXTM2, m_CubeMatrix[2].y + m_ChildRelativeYTM2, m_CubeMatrix[2].z + m_ChildRelativeZTM2);
-    Matrix mScale2 = XMMatrixScaling(0.5f, 0.5f, 0.5f);
-
-    m_WorldMatrix3 = mScale2 * mSpin2 * mTranslate2 * mOrbit2 * m_WorldMatrix2; // 스케일 적용 -> R(제자리 Y회전) -> 왼쪽으로 이동 -> 궤도 회전
+    XMStoreFloat4(&m_LightDirsEvaluated, vLightDir);
 }
 
 void DemoApp::Render()
@@ -128,28 +112,6 @@ void DemoApp::Render()
             ImGui::Text("Z");
             ImGui::SameLine();
             ImGui::SliderFloat("##pz", &m_ParentWorldZTM, -10.0f, 10.0f);
-
-            ImGui::Text("Child1 World Transform");
-            ImGui::Text("X");
-            ImGui::SameLine();
-            ImGui::SliderFloat("##cx1", &m_ChildRelativeXTM1, -10.0f, 10.0f);
-            ImGui::Text("Y");
-            ImGui::SameLine();
-            ImGui::SliderFloat("##cy1", &m_ChildRelativeYTM1, -10.0f, 10.0f);
-            ImGui::Text("Z");
-            ImGui::SameLine();
-            ImGui::SliderFloat("##cz1", &m_ChildRelativeZTM1, -10.0f, 10.0f);
-
-            ImGui::Text("Child2 World Transform");
-            ImGui::Text("X");
-            ImGui::SameLine();
-            ImGui::SliderFloat("##cx2", &m_ChildRelativeXTM2, -10.0f, 10.0f);
-            ImGui::Text("Y");
-            ImGui::SameLine();
-            ImGui::SliderFloat("##cy2", &m_ChildRelativeYTM2, -10.0f, 10.0f);
-            ImGui::Text("Z");
-            ImGui::SameLine();
-            ImGui::SliderFloat("##cz3", &m_ChildRelativeZTM2, -10.0f, 10.0f);
 
             ImGui::End();
         }
@@ -216,50 +178,25 @@ void DemoApp::Render()
     cb1.WorldMatrix = XMMatrixTranspose(m_WorldMatrix);
     cb1.ViewMatrix = XMMatrixTranspose(m_ViewMatrix);
     cb1.ProjectionMatrix = XMMatrixTranspose(m_ProjectionMatrix);
-    cb1.vLightDir[0] = m_LightDirsEvaluated[0];
-    cb1.vLightDir[1] = m_LightDirsEvaluated[1];
-    cb1.vLightColor[0] = m_LightColors[0];
-    cb1.vLightColor[1] = m_LightColors[1];
+    cb1.vLightDir = m_LightDirsEvaluated;
+    cb1.vLightColor = m_LightColor;
     cb1.vOutputColor = XMFLOAT4(0.0f, 0.0f, 0.0f, 0.0f);
     m_DeviceContext->UpdateSubresource(m_ConstantBuffer, 0, nullptr, &cb1, 0, 0);
 
     // 출력하기
     m_DeviceContext->DrawIndexed(m_Indices, 0, 0);
 
-    // 두번째 큐브 상수 버퍼 설정
-    ConstantBuffer cb2;
-    cb2.WorldMatrix = XMMatrixTranspose(m_WorldMatrix2);
-    cb2.ViewMatrix = XMMatrixTranspose(m_ViewMatrix);
-    cb2.ProjectionMatrix = XMMatrixTranspose(m_ProjectionMatrix);
-    m_DeviceContext->UpdateSubresource(m_ConstantBuffer, 0, nullptr, &cb2, 0, 0);
-
-    // 출력하기
-    m_DeviceContext->DrawIndexed(m_Indices, 0, 0);
-
-    // 세번째 큐브 상수 버퍼 설정
-    ConstantBuffer cb3;
-    cb3.WorldMatrix = XMMatrixTranspose(m_WorldMatrix3);
-    cb3.ViewMatrix = XMMatrixTranspose(m_ViewMatrix);
-    cb3.ProjectionMatrix = XMMatrixTranspose(m_ProjectionMatrix);
-    m_DeviceContext->UpdateSubresource(m_ConstantBuffer, 0, nullptr, &cb3, 0, 0);
-
-    // 출력하기
-    m_DeviceContext->DrawIndexed(m_Indices, 0, 0);
-
     // 라이팅 렌더
-    for (int m = 0; m < 2; m++)
-    {
-        XMMATRIX mLight = XMMatrixTranslationFromVector(5.0f * XMLoadFloat4(&m_LightDirsEvaluated[m]));
-        XMMATRIX mLightScale = XMMatrixScaling(0.2f, 0.2f, 0.2f);
-        mLight = mLightScale * mLight;
+    XMMATRIX mLight = XMMatrixTranslationFromVector(5.0f * XMLoadFloat4(&m_LightDirsEvaluated));
+    XMMATRIX mLightScale = XMMatrixScaling(0.5f, 0.5f, 0.5f);
+    mLight = mLightScale * mLight;
 
-        // 현재 라이트를 적용
-        cb1.WorldMatrix = XMMatrixTranspose(mLight);
-        cb1.vOutputColor = m_LightColors[m];
-        m_DeviceContext->UpdateSubresource(m_ConstantBuffer, 0, nullptr, &cb1, 0, 0);
-        m_DeviceContext->PSSetShader(m_PixelShaderSolid, nullptr, 0);
-        m_DeviceContext->DrawIndexed(m_Indices, 0, 0);
-    }
+    // 현재 라이트를 적용
+    cb1.WorldMatrix = XMMatrixTranspose(mLight);
+    cb1.vOutputColor = m_LightColor;
+    m_DeviceContext->UpdateSubresource(m_ConstantBuffer, 0, nullptr, &cb1, 0, 0);
+    m_DeviceContext->PSSetShader(m_PixelShaderSolid, nullptr, 0);
+    m_DeviceContext->DrawIndexed(m_Indices, 0, 0);
 
     // 현재 백 버퍼에서 렌더된 정보를 프론트 버퍼에(스크린) 전달
     m_SwapChain->Present(0, 0);
@@ -427,7 +364,7 @@ bool DemoApp::InitScene()
     D3D11_INPUT_ELEMENT_DESC layout[] =
     {
         {"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0},
-        {"NORMAL",    0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0}
+        {"NORMAL",    0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0}
     };
 
     ID3DBlob* vertexShaderBuffer = nullptr;
@@ -450,11 +387,22 @@ bool DemoApp::InitScene()
     // 정육면체
     WORD indices[] =
     {
+        // 윗면
         3,1,0, 2,1,3,
+
+        // 밑면
         6,4,5, 7,4,6,
+
+        // 왼쪽
         11,9,8, 10,9,11,
+
+        // 오른쪽
         14,12,13, 15,12,14,
+
+        // 앞
         19,17,16, 18,17,19,
+
+        // 뒤
         22,20,21, 23,20,22
     };
 
@@ -502,16 +450,12 @@ bool DemoApp::InitScene()
 
     // 쉐이더에 전달할 데이터 설정
     m_WorldMatrix = XMMatrixIdentity();
-    m_WorldMatrix2 = XMMatrixIdentity();
-    m_WorldMatrix3 = XMMatrixIdentity();
 
-    // 큐브 트랜스폼을 벡터에 추가
-    m_CubeMatrix.push_back(Vector3{ 0.0f, 0.0f, 0.0f });
-    m_CubeMatrix.push_back(Vector3{ -4.0f, 0.0f, 0.0f });
-    m_CubeMatrix.push_back(Vector3{ -4.0f, 0.0f, 0.0f });
+    // 큐브 트랜스폼 설정
+    m_CubeMatrix = Vector3{ 0.0f, 0.0f, 0.0f };
 
     // Initialize the view matrix
-    m_Eye = XMVectorSet(0.0f, 1.0f, -5.0f, 0.0f);
+    m_Eye = XMVectorSet(0.0f, 1.0f, -8.0f, 0.0f);
     m_At = XMVectorSet(0.0f, 0.0f, 0.1f, 0.0f);
     m_Up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
 

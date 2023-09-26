@@ -2,7 +2,6 @@
 #include <d3d11.h>
 #include "../Common/GameApp.h"
 #include <directxtk/SimpleMath.h>
-#include <vector>
 
 using namespace DirectX::SimpleMath;
 using namespace DirectX;
@@ -32,10 +31,12 @@ public:
     ID3D11Buffer* m_IndexBuffer = nullptr;                  // 인덱스 버퍼
     int m_Indices = 0;                                      // 인덱스 개수
     ID3D11Buffer* m_ConstantBuffer = nullptr;               // 상수 버퍼
+    ID3D11ShaderResourceView* m_TextureRV = nullptr;        // 텍스처 리소스 뷰
+    ID3D11SamplerState* m_SamplerLinear = nullptr;          // 샘플러 상태
+
+    Vector4	m_MeshColor = { 0.7f, 0.7f, 0.7f, 1.0f };
 
     Matrix m_WorldMatrix;                                   // 월드좌표계 공간으로 변환을 위한 행렬
-    Matrix m_WorldMatrix2;                                  // 월드좌표계 공간으로 변환을 위한 행렬
-    Matrix m_WorldMatrix3;                                  // 월드좌표계 공간으로 변환을 위한 행렬
     Matrix m_ViewMatrix;                                    // 카메라좌표계(뷰좌표계) 공간으로 변환을 위한 행렬
     Matrix m_ProjectionMatrix;                              // 단위장치좌표계(Normalized Device Coordinate) 공간으로 변환을 위한 행렬
 
@@ -46,14 +47,6 @@ public:
     float m_ParentWorldYTM;
     float m_ParentWorldZTM;
 
-    float m_ChildRelativeXTM1;
-    float m_ChildRelativeYTM1;
-    float m_ChildRelativeZTM1;
-
-    float m_ChildRelativeXTM2;
-    float m_ChildRelativeYTM2;
-    float m_ChildRelativeZTM2;
-
     float m_CameraWorldXTM;
     float m_CameraWorldYTM;
     float m_CameraWorldZTM;
@@ -63,7 +56,7 @@ public:
     float m_CameraNear;
     float m_CameraFar;
 
-    std::vector<Vector3> m_CubeMatrix;
+    Vector3 m_CubeMatrix;
 
     XMVECTOR m_Eye;
     XMVECTOR m_At;
@@ -71,20 +64,10 @@ public:
 
     float m_InitColor[4] = { 0.8f, 1.0f, 1.0f, 1.0f };
 
-    // 라이트 색상
-    XMFLOAT4 m_LightColors[2] =
-    {
-        XMFLOAT4(0.5f, 0.5f, 0.5f, 1.0f),   
-        XMFLOAT4(0.5f, 0.0f, 0.0f, 1.0f)         
-    };
-    // 라이트 위치인거같기도하고.. 방향인거같기도하고..
-    XMFLOAT4 m_InitialLightDirs[2] =
-    {
-        XMFLOAT4(-0.5f, 0.5f, -0.5f, 1.0f),
-        XMFLOAT4(0.0f, 0.0f, -1.0f, 1.0f)
-    };
-
-    XMFLOAT4 m_LightDirsEvaluated[2] = {}; // 최종 계산된 라이트 방향
+    // 라이트 색상, 라이트 위치, 최종 계산된 라이트 방향
+    XMFLOAT4 m_LightColor = {0.5f, 0.0f, 0.0f, 1.0f};
+    XMFLOAT4 m_LightDir = {0.0f, 0.0f, -1.0f, 1.0f};
+    XMFLOAT4 m_LightDirsEvaluated = {}; 
 
 public:
     virtual bool Initialize(UINT width, UINT height);

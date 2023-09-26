@@ -4,8 +4,8 @@ cbuffer ConstantBuffer : register(b0)
     matrix View;
     matrix Projection;
 
-    float4 vLightDir[2];
-    float4 vLightColor[2];
+    float4 vLightDir;
+    float4 vLightColor;
     float4 vOutputColor;
 }
 
