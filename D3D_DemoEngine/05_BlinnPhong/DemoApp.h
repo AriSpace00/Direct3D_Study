@@ -66,9 +66,9 @@ public:
     float m_InitColor[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
 
     // 라이트 색상, 라이트 위치, 최종 계산된 라이트 방향
-    XMFLOAT4 m_LightColor = {1.0f, 1.0f, 1.0f, 1.0f};
-    XMFLOAT4 m_LightDir = {0.0f, 0.0f, -1.0f, 1.0f};
-    XMFLOAT4 m_LightDirsEvaluated = {}; 
+    XMFLOAT4 m_LightColor = { 1.0f, 1.0f, 1.0f, 1.0f };
+    XMFLOAT4 m_LightDir = { 0.0f, 0.0f, -1.0f, 1.0f };
+    XMFLOAT4 m_LightDirsEvaluated = {};
 
 public:
     virtual bool Initialize(UINT width, UINT height);

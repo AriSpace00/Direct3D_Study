@@ -41,9 +41,9 @@ public:
     bool m_IsCubePropertiesWindow = false;
     bool m_IsCameraPropertiesWindow = false;
 
-    float m_ParentWorldXTM;
-    float m_ParentWorldYTM;
-    float m_ParentWorldZTM;
+    float m_CubeWorldXTM;
+    float m_CubeWorldYTM;
+    float m_CubeWorldZTM;
 
     float m_ChildRelativeXTM1;
     float m_ChildRelativeYTM1;

@@ -69,7 +69,7 @@ void DemoApp::Update()
 
     // 첫번째 큐브: Y축으로 돌기
     Matrix mSpin = XMMatrixRotationY(t);
-    Matrix mTranslate = XMMatrixTranslation(m_CubeMatrix[0].x + m_ParentWorldXTM, m_CubeMatrix[0].y + m_ParentWorldYTM, m_CubeMatrix[0].z + m_ParentWorldZTM);
+    Matrix mTranslate = XMMatrixTranslation(m_CubeMatrix[0].x + m_CubeWorldXTM, m_CubeMatrix[0].y + m_CubeWorldYTM, m_CubeMatrix[0].z + m_CubeWorldZTM);
     m_WorldMatrix = mSpin * mTranslate;
 
     // 두번째 큐브 : 첫번째 큐브를 중심으로 Y축으로 돌기
@@ -114,13 +114,13 @@ void DemoApp::Render()
         ImGui::Text("Parent Mesh World Transform");
         ImGui::Text("X");
         ImGui::SameLine();
-        ImGui::SliderFloat("##px", &m_ParentWorldXTM, -10.0f, 10.0f);
+        ImGui::SliderFloat("##px", &m_CubeWorldXTM, -10.0f, 10.0f);
         ImGui::Text("Y");
         ImGui::SameLine();
-        ImGui::SliderFloat("##py", &m_ParentWorldYTM, -10.0f, 10.0f);
+        ImGui::SliderFloat("##py", &m_CubeWorldYTM, -10.0f, 10.0f);
         ImGui::Text("Z");
         ImGui::SameLine();
-        ImGui::SliderFloat("##pz", &m_ParentWorldZTM, -10.0f, 10.0f);
+        ImGui::SliderFloat("##pz", &m_CubeWorldZTM, -10.0f, 10.0f);
 
         ImGui::Text("Child1 World Transform");
         ImGui::Text("X");

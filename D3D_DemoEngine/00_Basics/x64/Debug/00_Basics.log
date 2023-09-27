@@ -1,4 +1,4 @@
 ﻿  WinMain.cpp
   DemoApp.cpp
   코드를 생성하고 있습니다...
-D:\게임인재원_5기_프로그래밍과정_2반\3학기\3D 그래픽스 프로그래밍 Assignment\Solutions\김민정\Direct3D_Study\D3D_DemoEngine\00_Basics\DemoApp.cpp : fatal  error C1090: PDB API를 호출하지 못했습니다. 오류 코드 '3': D:\게임인재원_5기_프로그래밍과정_2반\3학기\3D 그래픽스 프로그래밍 Assignment\Solutions\김민정\Direct3D_Study\D3D_DemoEngine\00_Basics\x64\Debug\vc143.pdb
+  00_Basics.vcxproj -> D:\게임인재원_5기_프로그래밍과정_2반\3학기\3D 그래픽스 프로그래밍 Assignment\Solutions\김민정\Direct3D_Study\D3D_DemoEngine\x64\Debug\00_Basics.exe
