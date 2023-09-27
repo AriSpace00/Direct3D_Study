@@ -12,24 +12,6 @@
 
 using namespace DirectX::SimpleMath;
 
-struct Vertex
-{
-    Vector3 Pos;
-    Vector3 Nor;
-    Vector2 Tex;
-};
-
-struct ConstantBuffer
-{
-    Matrix WorldMatrix;
-    Matrix ViewMatrix;
-    Matrix ProjectionMatrix;
-
-    Vector4 vLightDir;
-    Vector4 vLightColor;
-    Vector4 vOutputColor;
-};
-
 DemoApp::DemoApp(HINSTANCE hInstance)
     : GameApp(hInstance)
     , m_CameraNear(0.01f)
@@ -77,11 +59,6 @@ void DemoApp::Update()
     m_LightDirsEvaluated = m_LightDir;
     XMVECTOR vLightDir = XMLoadFloat4(&m_LightDir);
     XMStoreFloat4(&m_LightDirsEvaluated, vLightDir);
-
-    // 텍스처 설정
-    /*m_MeshColor.x = (sinf(t * 1.0f) + 1.0f) * 0.5f;
-    m_MeshColor.y = (cosf(t * 3.0f) + 1.0f) * 0.5f;
-    m_MeshColor.z = (sinf(t * 5.0f) + 1.0f) * 0.5f;*/
 }
 
 void DemoApp::Render()
