@@ -1,28 +1,45 @@
 Texture2D txDiffuse : register(t0);
 SamplerState samLinear : register(s0);
 
-cbuffer ConstantBuffer : register(b0)
+cbuffer Transform : register(b0)
 {
     matrix World;
     matrix View;
     matrix Projection;
+}
 
-    float4 vLightDir;
-    float4 vLightColor;
-    float4 vOutputColor;
+cbuffer DirectionLight : register(b1)
+{
+    float3 LightDirection;
+    float DirectionLight_Pad0;
+    float4 LightAmbient;
+    float4 LightDiffuse;
+    float4 LightSpecular;
+    float3 EyePosition;
+    bool UseBlinnPhong;
+}
+
+cbuffer Material : register(b2)
+{
+    float4 MaterialAmbient;
+    float4 MaterialDiffuse;
+    float4 MaterialSpecular;
+    float MaterialSpecularPower;
+    float3 Material_Pad0;
 }
 
 struct VS_INPUT
 {
-    float4 Pos : POSITION;
-    float3 Nor : NORMAL;
-    float2 Tex : TEXCOORD1;
+    float4 PosModel : POSITION;
+    float2 Texcoord : TEXCOORD0;
+    float3 NorModel : NORMAL;
 };
 
 struct PS_INPUT
 {
-    float4 Pos : SV_POSITION;
-    float3 Nor : TEXCOORD0;
-    float2 Tex : TEXCOORD1;
+    float4 PosProjection : SV_POSITION;
+    float4 PosWorld : POSITION;
+    float2 Texcoord : TEXCOORD0;
+    float3 NorWorld : NORMAL;
 };
 

@@ -46,7 +46,7 @@ public:
     float m_CubeWorldXTM;
     float m_CubeWorldYTM;
     float m_CubeWorldZTM;
-    float m_CubeYaw = 1.0f;
+    float m_CubeXYaw = 0.0f;
 
     float m_CameraWorldXTM;
     float m_CameraWorldYTM;
@@ -59,16 +59,19 @@ public:
 
     Vector3 m_CubeMatrix;
 
-    XMVECTOR m_Eye;
-    XMVECTOR m_At;
-    XMVECTOR m_Up;
+
+    XMVECTOR m_Eye;     // 카메라 좌표
+    XMVECTOR m_At;      // 카메라가 바라보는 방향
+    XMVECTOR m_Up;      // 카메라 상단의 방향
 
     float m_InitColor[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
 
     // 라이트 색상, 라이트 위치, 최종 계산된 라이트 방향
     XMFLOAT4 m_LightColor = {1.0f, 1.0f, 1.0f, 1.0f};
     XMFLOAT4 m_LightDir = {0.0f, 0.0f, -1.0f, 1.0f};
-    XMFLOAT4 m_LightDirsEvaluated = {}; 
+    XMFLOAT4 m_LightDirsEvaluated = {};
+
+    bool m_IsCubeRotation;
 
 public:
     virtual bool Initialize(UINT width, UINT height);

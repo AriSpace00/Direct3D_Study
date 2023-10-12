@@ -50,22 +50,42 @@ void DemoApp::Update()
 
     float t = GameTimer::m_Instance->TotalTime();
 
-    // 큐브 Y축으로 돌기
+    // 큐브, lighting matrix 업데이트
     Matrix mSpin = XMMatrixRotationY(t * m_CubeYaw);
-    Matrix mTranslate = XMMatrixTranslation(m_CubeMatrix.x + m_CubeWorldXTM, m_CubeMatrix.y + m_CubeWorldYTM, m_CubeMatrix.z + m_CubeWorldZTM);
-    m_WorldMatrix = mSpin * mTranslate;
-
-    // 라이팅 설정
-    m_LightDirsEvaluated = m_LightDir;
-    XMVECTOR vLightDir = XMLoadFloat4(&m_LightDir);
-    XMStoreFloat4(&m_LightDirsEvaluated, vLightDir);
+    m_WorldMatrix = mSpin;
 }
 
 void DemoApp::Render()
 {
     // 화면 칠하기
-    m_DeviceContext->ClearRenderTargetView(m_RenderTargetView, m_InitColor);
+    m_DeviceContext->ClearRenderTargetView(m_RenderTargetView, m_ClearColor);
     m_DeviceContext->ClearDepthStencilView(m_DepthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0);
+
+    // Draw 계열 함수를 호출하기 전에 렌더링 파이프라인에 필수 스테이지 설정을 해야한다.
+    m_DeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST); 
+    m_DeviceContext->IASetVertexBuffers(0, 1, &m_VertexBuffer, &m_VertexBufferStride, &m_VertexBufferOffset);
+    m_DeviceContext->IASetInputLayout(m_InputLayout);
+    m_DeviceContext->IASetIndexBuffer(m_IndexBuffer, DXGI_FORMAT_R16_UINT, 0);
+    m_DeviceContext->VSSetShader(m_VertexShader, nullptr, 0);
+    m_DeviceContext->VSSetConstantBuffers(0, 1, &m_CBTransform);
+    m_DeviceContext->PSSetConstantBuffers(1, 1, &m_CBDirectionalLight);
+    m_DeviceContext->PSSetShader(m_PixelShader, nullptr, 0);
+    m_DeviceContext->PSSetConstantBuffers(0, 1, &m_CBTransform);
+    m_DeviceContext->PSSetConstantBuffers(1, 1, &m_CBDirectionalLight);
+    m_DeviceContext->PSSetConstantBuffers(2, 1, &m_CBMaterial);
+    m_DeviceContext->PSSetShaderResources(0, 1, &m_TextureRV);
+    m_DeviceContext->PSSetSamplers(0, 1, &m_SamplerLinear);
+
+    // Cube, Lighting matrix 를 m_Transform 에 설정
+    m_Transform.WorldMatrix = XMMatrixTranspose(m_WorldMatrix);
+    m_Transform.ViewMatrix = XMMatrixTranspose(m_ViewMatrix);
+    m_Transform.ProjectionMatrix = XMMatrixTranspose(m_ProjectionMatrix);
+    m_DeviceContext->UpdateSubresource(m_CBTransform, 0, nullptr, &m_Transform, 0, 0);
+    m_DeviceContext->UpdateSubresource(m_CBDirectionalLight, 0, nullptr, &m_Light, 0, 0);
+    m_DeviceContext->UpdateSubresource(m_CBMaterial, 0, nullptr, &m_Material, 0, 0);
+
+    // 출력하기
+    m_DeviceContext->DrawIndexed(m_Indices, 0, 0);
 
     // ImGui
     {
@@ -84,16 +104,6 @@ void DemoApp::Render()
         {
             ImGui::Begin("Cube Properties");
 
-            ImGui::Text("Cube World Transform");
-            ImGui::Text("X");
-            ImGui::SameLine();
-            ImGui::SliderFloat("##px", &m_CubeWorldXTM, -10.0f, 10.0f);
-            ImGui::Text("Y");
-            ImGui::SameLine();
-            ImGui::SliderFloat("##py", &m_CubeWorldYTM, -10.0f, 10.0f);
-            ImGui::Text("Z");
-            ImGui::SameLine();
-            ImGui::SliderFloat("##pz", &m_CubeWorldZTM, -10.0f, 10.0f);
             ImGui::Text("Cube Yaw Value");
             ImGui::Text("Yaw");
             ImGui::SameLine();
@@ -151,71 +161,12 @@ void DemoApp::Render()
         {
             ImGui::Begin("Directional Light Properties");
 
-            ImGui::Text("Directional Light Direction");
-            ImGui::Text("X");
-            ImGui::SameLine();
-            ImGui::SliderFloat("##ldx", &m_LightDir.x, -10.0f, 10.0f);
-            ImGui::Text("Y");
-            ImGui::SameLine();
-            ImGui::SliderFloat("##ldy", &m_LightDir.y, -10.0f, 10.0f);
-            ImGui::Text("Z");
-            ImGui::SameLine();
-            ImGui::SliderFloat("##ldz", &m_LightDir.z, -10.0f, 10.0f);
-
-            ImGui::Text("Directional Light Color");
-            ImGui::Text("R");
-            ImGui::SameLine();
-            ImGui::SliderFloat("##lcx", &m_LightColor.x, 0.0f, 1.0f);
-            ImGui::Text("G");
-            ImGui::SameLine();
-            ImGui::SliderFloat("##lcy", &m_LightColor.y, 0.0f, 1.0f);
-            ImGui::Text("B");
-            ImGui::SameLine();
-            ImGui::SliderFloat("##lcz", &m_LightColor.z, 0.0f, 1.0f);
-
             ImGui::End();
         }
 
         ImGui::Render();
         ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
     }
-
-    // Draw 계열 함수를 호출하기 전에 렌더링 파이프라인에 필수 스테이지 설정을 해야한다.
-    m_DeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST); // 정점을 이어서 그릴 방식 설정
-    m_DeviceContext->IASetVertexBuffers(0, 1, &m_VertexBuffer, &m_VertexBufferStride, &m_VertexBufferOffset);
-    m_DeviceContext->IASetInputLayout(m_InputLayout);
-    m_DeviceContext->IASetIndexBuffer(m_IndexBuffer, DXGI_FORMAT_R16_UINT, 0);
-    m_DeviceContext->VSSetShader(m_VertexShader, nullptr, 0);
-    m_DeviceContext->VSSetConstantBuffers(0, 1, &m_ConstantBuffer);
-    m_DeviceContext->PSSetShader(m_PixelShader, nullptr, 0);
-    m_DeviceContext->PSSetConstantBuffers(0, 1, &m_ConstantBuffer);
-    m_DeviceContext->PSSetShaderResources(0, 1, &m_TextureRV);
-    m_DeviceContext->PSSetSamplers(0, 1, &m_SamplerLinear);
-
-    // 첫번째 큐브 상수 버퍼 설정
-    ConstantBuffer cb1;
-    cb1.WorldMatrix = XMMatrixTranspose(m_WorldMatrix);
-    cb1.ViewMatrix = XMMatrixTranspose(m_ViewMatrix);
-    cb1.ProjectionMatrix = XMMatrixTranspose(m_ProjectionMatrix);
-    cb1.vLightDir = m_LightDirsEvaluated;
-    cb1.vLightColor = m_LightColor;
-    cb1.vOutputColor = XMFLOAT4(0.0f, 0.0f, 0.0f, 0.0f);
-    m_DeviceContext->UpdateSubresource(m_ConstantBuffer, 0, nullptr, &cb1, 0, 0);
-
-    // 출력하기
-    m_DeviceContext->DrawIndexed(m_Indices, 0, 0);
-
-    // 라이팅 렌더
-    XMMATRIX mLight = XMMatrixTranslationFromVector(5.0f * XMLoadFloat4(&m_LightDirsEvaluated));
-    XMMATRIX mLightScale = XMMatrixScaling(0.1f, 0.1f, 0.1f);
-    mLight = mLightScale * mLight;
-
-    // 현재 라이트를 적용
-    cb1.WorldMatrix = XMMatrixTranspose(mLight);
-    cb1.vOutputColor = m_LightColor;
-    m_DeviceContext->UpdateSubresource(m_ConstantBuffer, 0, nullptr, &cb1, 0, 0);
-    m_DeviceContext->PSSetShader(m_PixelShaderSolid, nullptr, 0);
-    //m_DeviceContext->DrawIndexed(m_Indices, 0, 0);
 
     // 현재 백 버퍼에서 렌더된 정보를 프론트 버퍼에(스크린) 전달
     m_SwapChain->Present(0, 0);
@@ -323,32 +274,38 @@ bool DemoApp::InitScene()
     // 정육면체
     Vertex vertices[] =
     {
-        { Vector3(-1.0f, 1.0f, -1.0f),	Vector3(0.0f, 1.0f, 0.0f), Vector2(1.0f,0.0f)},// Normal Y +	 
+        // 윗면 Normal Y +
+        { Vector3(-1.0f, 1.0f, -1.0f),	Vector3(0.0f, 1.0f, 0.0f), Vector2(1.0f,0.0f)},	 
         { Vector3(1.0f, 1.0f, -1.0f),	Vector3(0.0f, 1.0f, 0.0f), Vector2(0.0f,0.0f) },
         { Vector3(1.0f, 1.0f, 1.0f),	Vector3(0.0f, 1.0f, 0.0f), Vector2(0.0f,1.0f) },
         { Vector3(-1.0f, 1.0f, 1.0f),	Vector3(0.0f, 1.0f, 0.0f), Vector2(1.0f,1.0f) },
 
-        { Vector3(-1.0f, -1.0f, -1.0f), Vector3(0.0f, -1.0f, 0.0f), Vector2(0.0f,0.0f) },// Normal Y -		
+        // 아랫면 Normal Y -
+        { Vector3(-1.0f, -1.0f, -1.0f), Vector3(0.0f, -1.0f, 0.0f), Vector2(0.0f,0.0f) },		
         { Vector3(1.0f, -1.0f, -1.0f),	Vector3(0.0f, -1.0f, 0.0f), Vector2(1.0f,0.0f) },
         { Vector3(1.0f, -1.0f, 1.0f),	Vector3(0.0f, -1.0f, 0.0f), Vector2(1.0f,1.0f) },
         { Vector3(-1.0f, -1.0f, 1.0f),	Vector3(0.0f, -1.0f, 0.0f), Vector2(0.0f,1.0f) },
 
-        { Vector3(-1.0f, -1.0f, 1.0f),	Vector3(-1.0f, 0.0f, 0.0f), Vector2(0.0f,1.0f) },//	Normal X -
+        // 좌측 옆면 Normal X -
+        { Vector3(-1.0f, -1.0f, 1.0f),	Vector3(-1.0f, 0.0f, 0.0f), Vector2(0.0f,1.0f) },
         { Vector3(-1.0f, -1.0f, -1.0f), Vector3(-1.0f, 0.0f, 0.0f), Vector2(1.0f,1.0f) },
         { Vector3(-1.0f, 1.0f, -1.0f),	Vector3(-1.0f, 0.0f, 0.0f), Vector2(1.0f,0.0f) },
         { Vector3(-1.0f, 1.0f, 1.0f),	Vector3(-1.0f, 0.0f, 0.0f), Vector2(0.0f,0.0f) },
 
-        { Vector3(1.0f, -1.0f, 1.0f),	Vector3(1.0f, 0.0f, 0.0f), Vector2(1.0f,1.0f) },// Normal X +
+        // 우측 옆면 Normal X +
+        { Vector3(1.0f, -1.0f, 1.0f),	Vector3(1.0f, 0.0f, 0.0f), Vector2(1.0f,1.0f) },
         { Vector3(1.0f, -1.0f, -1.0f),	Vector3(1.0f, 0.0f, 0.0f), Vector2(0.0f,1.0f) },
         { Vector3(1.0f, 1.0f, -1.0f),	Vector3(1.0f, 0.0f, 0.0f), Vector2(0.0f,0.0f) },
         { Vector3(1.0f, 1.0f, 1.0f),	Vector3(1.0f, 0.0f, 0.0f), Vector2(1.0f,0.0f) },
 
-        { Vector3(-1.0f, -1.0f, -1.0f), Vector3(0.0f, 0.0f, -1.0f), Vector2(0.0f,1.0f) }, // Normal Z -
+        // 정면 Normal Z -
+        { Vector3(-1.0f, -1.0f, -1.0f), Vector3(0.0f, 0.0f, -1.0f), Vector2(0.0f,1.0f) }, 
         { Vector3(1.0f, -1.0f, -1.0f),	Vector3(0.0f, 0.0f, -1.0f), Vector2(1.0f,1.0f) },
         { Vector3(1.0f, 1.0f, -1.0f),	Vector3(0.0f, 0.0f, -1.0f), Vector2(1.0f,0.0f) },
         { Vector3(-1.0f, 1.0f, -1.0f),	Vector3(0.0f, 0.0f, -1.0f), Vector2(0.0f,0.0f) },
 
-        { Vector3(-1.0f, -1.0f, 1.0f),	Vector3(0.0f, 0.0f, 1.0f), Vector2(1.0f,1.0f) },// Normal Z +
+        // 뒷면 Normal Z +
+        { Vector3(-1.0f, -1.0f, 1.0f),	Vector3(0.0f, 0.0f, 1.0f), Vector2(1.0f,1.0f) },
         { Vector3(1.0f, -1.0f, 1.0f),	Vector3(0.0f, 0.0f, 1.0f), Vector2(0.0f,1.0f) },
         { Vector3(1.0f, 1.0f, 1.0f),	Vector3(0.0f, 0.0f, 1.0f), Vector2(1.0f,0.0f) },
         { Vector3(-1.0f, 1.0f, 1.0f),	Vector3(0.0f, 0.0f, 1.0f), Vector2(1.0f,0.0f) },
@@ -374,13 +331,6 @@ bool DemoApp::InitScene()
     // SemanticName , SemanticIndex , Format , InputSlot , AlignedByteOffset , InputSlotClass , InstanceDataStepRate
 
     // 버텍스 셰이더가 문제없이 생성된 후 Input Layout 생성
-    D3D11_INPUT_ELEMENT_DESC layout[] =
-    {
-        {"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0},
-        {"NORMAL",    0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0},
-        { "TEXCOORD", 1, DXGI_FORMAT_R32G32_FLOAT, 0, 24, D3D11_INPUT_PER_VERTEX_DATA, 0 }
-    };
-
     ID3DBlob* vertexShaderBuffer = nullptr;
     HR_T(CompileShaderFromFile(L"BasicVertexShader.hlsl", "main", "vs_4_0", &vertexShaderBuffer));
     if (FAILED(hr))
@@ -389,6 +339,13 @@ bool DemoApp::InitScene()
         SAFE_RELEASE(errorMessage);
         return false;
     }
+
+    D3D11_INPUT_ELEMENT_DESC layout[] =
+    {
+        {"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0},
+        {"NORMAL",    0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0},
+        { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 24, D3D11_INPUT_PER_VERTEX_DATA, 0 }
+    };
 
     HR_T(m_Device->CreateInputLayout(layout, ARRAYSIZE(layout), vertexShaderBuffer->GetBufferPointer(), vertexShaderBuffer->GetBufferSize(), &m_InputLayout));
 
@@ -434,7 +391,7 @@ bool DemoApp::InitScene()
 
     // 5. Render() 에서 파이프라인에 바인딩할 픽셀 셰이더 생성
     ID3DBlob* pixelShaderBuffer = nullptr;
-    HR_T(CompileShaderFromFile(L"BasicPixelShader.hlsl", "main", "ps_4_0", &pixelShaderBuffer));
+    HR_T(CompileShaderFromFile(L"BlinnPhongPS.hlsl", "main", "ps_4_0", &pixelShaderBuffer));
     if (FAILED(hr))
     {
         MessageBoxA(m_hWnd, (char*)errorMessage->GetBufferPointer(), "Pixel Shader 생성 오류", MB_OK);
@@ -444,23 +401,25 @@ bool DemoApp::InitScene()
     HR_T(m_Device->CreatePixelShader(pixelShaderBuffer->GetBufferPointer(), pixelShaderBuffer->GetBufferSize(), NULL, &m_PixelShader));
     SAFE_RELEASE(pixelShaderBuffer);
 
-    HR_T(CompileShaderFromFile(L"SolidPixelShader.hlsl", "main", "ps_4_0", &pixelShaderBuffer));
-    if (FAILED(hr))
-    {
-        MessageBoxA(m_hWnd, (char*)errorMessage->GetBufferPointer(), "Solid Pixel Shader 생성 오류", MB_OK);
-        SAFE_RELEASE(errorMessage);
-        return false;
-    }
-    HR_T(m_Device->CreatePixelShader(pixelShaderBuffer->GetBufferPointer(), pixelShaderBuffer->GetBufferSize(), NULL, &m_PixelShaderSolid));
-    SAFE_RELEASE(pixelShaderBuffer);
-
     // 6. Render() 에서 파이프라인에 바인딩할 상수 버퍼 생성
     bd = {};
     bd.Usage = D3D11_USAGE_DEFAULT;
-    bd.ByteWidth = sizeof(ConstantBuffer);
+    bd.ByteWidth = sizeof(CB_Transform);
     bd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
     bd.CPUAccessFlags = 0;
-    HR_T(m_Device->CreateBuffer(&bd, nullptr, &m_ConstantBuffer));
+    HR_T(m_Device->CreateBuffer(&bd, nullptr, &m_CBTransform));
+
+    bd.Usage = D3D11_USAGE_DEFAULT;
+    bd.ByteWidth = sizeof(CB_DirectionalLight);
+    bd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+    bd.CPUAccessFlags = 0;
+    HR_T(m_Device->CreateBuffer(&bd, nullptr, &m_CBDirectionalLight));
+
+    bd.Usage = D3D11_USAGE_DEFAULT;
+    bd.ByteWidth = sizeof(CB_Material);
+    bd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+    bd.CPUAccessFlags = 0;
+    HR_T(m_Device->CreateBuffer(&bd, nullptr, &m_CBMaterial));
 
     // 텍스처 로드
     HR_T(CreateDDSTextureFromFile(m_Device, L"../Resource/fluid.dds", nullptr, &m_TextureRV));
@@ -477,42 +436,47 @@ bool DemoApp::InitScene()
     HR_T(m_Device->CreateSamplerState(&sampDesc, &m_SamplerLinear));
 
     // 쉐이더에 전달할 데이터 설정
+
+    // 월드 매트릭스 초기화
     m_WorldMatrix = XMMatrixIdentity();
 
-    // 큐브 트랜스폼 설정
-    m_CubeMatrix = Vector3{ 0.0f, 0.0f, 0.0f };
-
-    // Initialize the view matrix
+    // 뷰 매트릭스 초기화
     m_Eye = XMVectorSet(0.0f, 1.0f, -8.0f, 0.0f);
     m_At = XMVectorSet(0.0f, 0.0f, 0.1f, 0.0f);
     m_Up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
 
     m_ViewMatrix = XMMatrixLookToLH(m_Eye, m_At, m_Up);
 
-    // Initialize the projection matrix
+    // 프로젝션 매트릭스 초기화
     m_ProjectionMatrix = XMMatrixPerspectiveFovLH(XM_PIDIV4, m_ClientWidth / (FLOAT)m_ClientHeight, 0.01f, 100.0f);
     return true;
 }
 
 void DemoApp::UnInitScene()
 {
+    SAFE_RELEASE(m_CBTransform);
+    SAFE_RELEASE(m_CBDirectionalLight);
+    SAFE_RELEASE(m_CBMaterial);
+
     SAFE_RELEASE(m_VertexBuffer);
     SAFE_RELEASE(m_IndexBuffer);
     SAFE_RELEASE(m_VertexShader);
     SAFE_RELEASE(m_PixelShader);
     SAFE_RELEASE(m_InputLayout);
-    SAFE_RELEASE(m_ConstantBuffer);
     SAFE_RELEASE(m_DepthStencilView);
 }
 
 bool DemoApp::InitImGUI()
 {
+    // ImGui 초기화
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
 
+    // ImGui 스타일 설정
     ImGui::StyleColorsDark();
     //ImGui::StyleColorsLight();
 
+    // 플랫폼, 렌더러 설정
     ImGui_ImplWin32_Init(m_hWnd);
     ImGui_ImplDX11_Init(m_Device, m_DeviceContext);
 

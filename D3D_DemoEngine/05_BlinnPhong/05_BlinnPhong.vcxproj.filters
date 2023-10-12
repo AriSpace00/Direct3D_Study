@@ -14,13 +14,10 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="BasicPixelShader.hlsl">
+    <FxCompile Include="BlinnPhongPS.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
-    <FxCompile Include="BasicVertexShader.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="SolidPixelShader.hlsl">
+    <FxCompile Include="BlinnPhongVS.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
   </ItemGroup>

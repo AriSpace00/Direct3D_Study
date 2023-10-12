@@ -83,7 +83,7 @@ public:
     CB_DirectionalLight m_Light;
     float m_MeshScale = 100.0f;
 
-    Vector3 m_ClearColor = { 0.0f, 0.0f, 0.0f };
+    const float m_ClearColor[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
     Vector2 m_Rotation = { 0.0f, 0.0f };
     Vector3 m_CameraPos = { 0.0f, 0.0f, -1000.0f };
 

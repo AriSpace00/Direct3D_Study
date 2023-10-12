@@ -56,12 +56,12 @@ bool DemoApp::Initialize(UINT width, UINT height)
     if (!InitImGUI())
         return false;
 
-    if (!InitScene())
+    if (!InitScene()) 
         return false;
 
     return true;
 }
-
+ 
 void DemoApp::Update()
 {
     __super::Update();
@@ -69,9 +69,18 @@ void DemoApp::Update()
     float t = GameTimer::m_Instance->TotalTime();
 
     // 큐브 Y축으로 돌기
-    Matrix mSpin = XMMatrixRotationY(t * m_CubeYaw);
+    Matrix mSpin = XMMatrixRotationY(t);
+    Matrix mSpin2 = XMMatrixRotationX(m_CubeXYaw);
     Matrix mTranslate = XMMatrixTranslation(m_CubeMatrix.x + m_CubeWorldXTM, m_CubeMatrix.y + m_CubeWorldYTM, m_CubeMatrix.z + m_CubeWorldZTM);
-    m_WorldMatrix = mSpin * mTranslate;
+    if(m_IsCubeRotation)
+    {
+        m_WorldMatrix = mSpin * mTranslate;
+    }
+    else
+    {
+        m_WorldMatrix = mSpin2 * mTranslate;
+    }
+
 
     // 라이팅 설정
     m_LightDirsEvaluated = m_LightDir;
@@ -117,10 +126,11 @@ void DemoApp::Render()
             ImGui::Text("Z");
             ImGui::SameLine();
             ImGui::SliderFloat("##pz", &m_CubeWorldZTM, -10.0f, 10.0f);
-            ImGui::Text("Cube Yaw Value");
-            ImGui::Text("Yaw");
+            ImGui::Text("X Rotation");
             ImGui::SameLine();
-            ImGui::SliderFloat("##cy", &m_CubeYaw, 0.0f, 10.0f);
+            ImGui::SliderFloat("##yawx", &m_CubeXYaw, 0.0f, 60.0f);
+            ImGui::Text("Use Y Rotation");
+            ImGui::Checkbox("##yawy", &m_IsCubeRotation);
 
             ImGui::End();
         }
@@ -177,13 +187,13 @@ void DemoApp::Render()
             ImGui::Text("Directional Light Direction");
             ImGui::Text("X");
             ImGui::SameLine();
-            ImGui::SliderFloat("##ldx", &m_LightDir.x, -10.0f, 10.0f);
+            ImGui::SliderFloat("##ldx", &m_LightDir.x, -1.0f, 1.0f);
             ImGui::Text("Y");
             ImGui::SameLine();
-            ImGui::SliderFloat("##ldy", &m_LightDir.y, -10.0f, 10.0f);
+            ImGui::SliderFloat("##ldy", &m_LightDir.y, -1.0f, 1.0f);
             ImGui::Text("Z");
             ImGui::SameLine();
-            ImGui::SliderFloat("##ldz", &m_LightDir.z, -10.0f, 10.0f);
+            ImGui::SliderFloat("##ldz", &m_LightDir.z, -1.0f, 1.0f);
 
             ImGui::Text("Directional Light Color");
             ImGui::Text("R");
@@ -516,6 +526,7 @@ bool DemoApp::InitScene()
     m_At = XMVectorSet(0.0f, 0.0f, 0.1f, 0.0f);
     m_Up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
 
+    // XMMatrixLookAtLH 는 원하는 대상을 보는 뷰 매트릭스를 생성한다.
     m_ViewMatrix = XMMatrixLookToLH(m_Eye, m_At, m_Up);
 
     // Initialize the projection matrix
