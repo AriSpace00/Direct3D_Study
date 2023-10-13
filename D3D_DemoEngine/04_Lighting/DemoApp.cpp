@@ -483,16 +483,6 @@ bool DemoApp::InitScene()
     HR_T(m_Device->CreatePixelShader(pixelShaderBuffer->GetBufferPointer(), pixelShaderBuffer->GetBufferSize(), NULL, &m_PixelShader));
     SAFE_RELEASE(pixelShaderBuffer);
 
-    HR_T(CompileShaderFromFile(L"SolidPixelShader.hlsl", "main", "ps_4_0", &pixelShaderBuffer));
-    if (FAILED(hr))
-    {
-        MessageBoxA(m_hWnd, (char*)errorMessage->GetBufferPointer(), "Solid Pixel Shader 생성 오류", MB_OK);
-        SAFE_RELEASE(errorMessage);
-        return false;
-    }
-    HR_T(m_Device->CreatePixelShader(pixelShaderBuffer->GetBufferPointer(), pixelShaderBuffer->GetBufferSize(), NULL, &m_PixelShaderSolid));
-    SAFE_RELEASE(pixelShaderBuffer);
-
     // 6. Render() 에서 파이프라인에 바인딩할 상수 버퍼 생성
     bd = {};
     bd.Usage = D3D11_USAGE_DEFAULT;

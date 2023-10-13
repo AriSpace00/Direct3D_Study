@@ -38,7 +38,7 @@ struct VS_INPUT
 struct PS_INPUT
 {
     float4 PosProjection : SV_POSITION;
-    float4 PosWorld : POSITION;
+    float3 PosWorld : POSITION;
     float2 Texcoord : TEXCOORD0;
     float3 NorWorld : NORMAL;
 };
