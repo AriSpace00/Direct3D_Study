@@ -17,15 +17,15 @@ float4 main(PS_INPUT input) : SV_Target
     // Diffuse Light(Lambertian Lighting)
     float4 Diffuse = saturate(dot((float3) vLightDirection, Normal)* LightSpecular);
     
-    /// Specular Light
+    // Specular Light
     // Light Reflection : 점으로부터 물체에 반사된 빛
     float3 LightReflection = reflect(vLightDirection, Normal);
     // View : 시선벡터
     // 카메라가 물체를 바라보는 방향만 남기기 위해 노멀라이즈
-    float3 View = normalize(input.PosWorld - EyePosition);
+    float3 View = normalize(EyePosition - input.PosWorld);
     // 빛과 시선벡터의 내적(각도)에 따라 점의 색상이 밝아지도록 함 
     float fRDotV = max(0.0f, dot(LightReflection, View));
-    float4 Specular = pow(fRDotV, MaterialSpecularPower)* MaterialSpecularPower* LightSpecular;
+    float4 Specular = pow(fRDotV, MaterialSpecularPower)* MaterialSpecular * LightSpecular;
     
     // Blinn Phong
     float3 HalfVector = normalize(-vLightDirection + View);
@@ -40,5 +40,5 @@ float4 main(PS_INPUT input) : SV_Target
     finalColor = Ambient + Diffuse + Specular + Texture;
 
 
-    return finalColor;
+    return Specular;
 }

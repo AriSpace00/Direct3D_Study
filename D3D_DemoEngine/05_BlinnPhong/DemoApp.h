@@ -38,7 +38,7 @@ struct CB_Material
     Vector4 Ambient = { 1.0f,1.0f,1.0f,1.0f };
     Vector4 Diffuse = { 1.0f,1.0f,1.0f,1.0f };
     Vector4 Specular = { 1.0f,1.0f,1.0f,1.0f };
-    float SpecularPower = 2000;
+    float SpecularPower = 3000;
     Vector3 dummy;
 };
 
