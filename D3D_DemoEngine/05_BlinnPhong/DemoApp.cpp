@@ -15,7 +15,7 @@ using namespace DirectX::SimpleMath;
 DemoApp::DemoApp(HINSTANCE hInstance)
     : GameApp(hInstance)
     , m_CameraNear(0.01f)
-    , m_CameraFar(100.0f)
+    , m_CameraFar(9999.9f)
     , m_CameraFovYRadius(90.0f)
 {
 
@@ -50,9 +50,17 @@ void DemoApp::Update()
 
     float t = GameTimer::m_Instance->TotalTime();
 
-    // 큐브, lighting matrix 업데이트
-    Matrix mSpin = XMMatrixRotationY(t * m_CubeYaw);
-    m_WorldMatrix = mSpin;
+    // y축을 기준으로 큐브 회전
+    Matrix mSpin;
+    Matrix mSpinX = XMMatrixRotationX(m_CubeRotationX);
+    Matrix mSpinY = XMMatrixRotationY(m_CubeRotationY);
+    mSpin = mSpinX * mSpinY;
+
+    // 크기 변경
+    Matrix mScale = XMMatrixScaling(m_MeshScale, m_MeshScale, m_MeshScale);
+    m_WorldMatrix = mScale * mSpin;
+
+    m_Light.EyePosition = m_Eye;
 }
 
 void DemoApp::Render()
@@ -99,54 +107,60 @@ void DemoApp::Render()
         ImGui::NewFrame();
 
         // 1. 큐브 설정 윈도우
-        ImGui::SetNextWindowSize(ImVec2(250, 200));
+        ImGui::SetNextWindowSize(ImVec2(350, 150));
         ImGui::SetNextWindowPos(ImVec2(0, 0));
         {
-            ImGui::Begin("Cube Properties");
+            ImGui::Begin("Mesh Properties");
 
-            ImGui::Text("Cube Yaw Value");
-            ImGui::Text("Yaw");
+            ImGui::Text("Rotation");
+            ImGui::Text("X");
             ImGui::SameLine();
-            ImGui::SliderFloat("##cy", &m_CubeYaw, 0.0f, 10.0f);
+            ImGui::SliderFloat("##cx", &m_CubeRotationX, 0.0f, 90.0f);
+            ImGui::Text("Y");
+            ImGui::SameLine();
+            ImGui::SliderFloat("##cy", &m_CubeRotationY, 0.0f, 90.0f);
+            ImGui::Text("Scale");
+            ImGui::SameLine();
+            ImGui::SliderFloat("##cs", &m_MeshScale, 0.0f, 100.0f);
 
             ImGui::End();
         }
 
         // 2. 카메라 설정 윈도우
-        ImGui::SetNextWindowSize(ImVec2(250, 250));
-        ImGui::SetNextWindowPos(ImVec2(0, 200));
+        ImGui::SetNextWindowSize(ImVec2(350, 250));
+        ImGui::SetNextWindowPos(ImVec2(0, 150));
         {
             ImGui::Begin("Camera Properties");
 
-            ImGui::Text("Camera World Transform");
+            ImGui::Text("World Transform");
             float x = XMVectorGetX(m_Eye);
             float y = XMVectorGetY(m_Eye);
             float z = XMVectorGetZ(m_Eye);
             ImGui::Text("X");
             ImGui::SameLine();
-            ImGui::SliderFloat("##cwx", &x, -10.0f, 10.0f);
+            ImGui::SliderFloat("##cwx", &x, -1000.0f, 1000.0f);
             ImGui::Text("Y");
             ImGui::SameLine();
-            ImGui::SliderFloat("##cwy", &y, -10.0f, 10.0f);
+            ImGui::SliderFloat("##cwy", &y, -1000.0f, 1000.0f);
             ImGui::Text("Z");
             ImGui::SameLine();
-            ImGui::SliderFloat("##cwz", &z, -10.0f, 10.0f);
+            ImGui::SliderFloat("##cwz", &z, -1000.0f, 0.0f);
             m_Eye = DirectX::XMVectorSet(x, y, z, 0.0f);
             m_ViewMatrix = XMMatrixLookToLH(m_Eye, m_At, m_Up);
 
-            ImGui::Text("Camera FOV Degree");
+            ImGui::Text("FOV Degree");
             ImGui::Text("Y");
             ImGui::SameLine();
             ImGui::SliderFloat("##cfx", &m_CameraFovYRadius, 0.01f, 180.0f);
             float fovRadius = m_CameraFovYRadius * (DirectX::XM_PI / 180.0f);
 
-            ImGui::Text("Camera Near / Far");
+            ImGui::Text("Near / Far");
             ImGui::Text("Near");
             ImGui::SameLine();
-            ImGui::SliderFloat("##cn", &m_CameraNear, 0.01f, 99.9f);
+            ImGui::SliderFloat("##cn", &m_CameraNear, 0.01f, 9999.9f);
             ImGui::Text("Far ");
             ImGui::SameLine();
-            ImGui::SliderFloat("##cf", &m_CameraFar, 0.01f, 99.9f);
+            ImGui::SliderFloat("##cf", &m_CameraFar, 0.01f, 9999.9f);
             if (m_CameraNear < m_CameraFar)
             {
                 m_ProjectionMatrix = XMMatrixPerspectiveFovLH(fovRadius, m_ClientWidth / (FLOAT)m_ClientHeight, m_CameraNear, m_CameraFar);
@@ -156,10 +170,35 @@ void DemoApp::Render()
         }
 
         // 3. Light 설정 윈도우
-        ImGui::SetNextWindowSize(ImVec2(250, 400));
-        ImGui::SetNextWindowPos(ImVec2(0, 450));
+        ImGui::SetNextWindowSize(ImVec2(350, 450));
+        ImGui::SetNextWindowPos(ImVec2(0, 400));
         {
-            ImGui::Begin("Directional Light Properties");
+            ImGui::Begin("Light Properties");
+
+            ImGui::Text("Use Blinn Phong");
+            ImGui::SameLine();
+            ImGui::Checkbox("##buse", &m_Light.UseBlinnPhong);
+
+            ImGui::Text("[Directional Light]");
+            ImGui::Text("Light Direction");
+            ImGui::SliderFloat3("##ld", (float*)& m_Light.Direction, -1.0f, 1.0f);
+            ImGui::Text("Light Ambient");
+            ImGui::ColorEdit4("##la", (float*)&m_Light.Ambient);
+            ImGui::Text("Light Diffuse");
+            ImGui::ColorEdit4("##ld", (float*)&m_Light.Diffuse);
+            ImGui::Text("Light Specular");
+            ImGui::ColorEdit4("##ls", (float*)&m_Light.Specular);
+
+            ImGui::Text("[Material]");
+            ImGui::Text("Material Ambient");
+            ImGui::ColorEdit4("##ma", (float*)&m_Material.Ambient);
+            ImGui::Text("Material Diffuse");
+            ImGui::ColorEdit4("##md", (float*)&m_Material.Diffuse);
+            ImGui::Text("Material Specular");
+            ImGui::ColorEdit4("##ms", (float*)&m_Material.Specular);
+            ImGui::Text("Material Specular Power");
+            ImGui::SliderFloat("##sp", &m_Material.SpecularPower, 2.0f, 4096.0f);
+
 
             ImGui::End();
         }
@@ -274,41 +313,35 @@ bool DemoApp::InitScene()
     // 정육면체
     Vertex vertices[] =
     {
-        // 윗면 Normal Y +
-        { Vector3(-1.0f, 1.0f, -1.0f),	Vector3(0.0f, 1.0f, 0.0f), Vector2(1.0f,0.0f)},	 
-        { Vector3(1.0f, 1.0f, -1.0f),	Vector3(0.0f, 1.0f, 0.0f), Vector2(0.0f,0.0f) },
-        { Vector3(1.0f, 1.0f, 1.0f),	Vector3(0.0f, 1.0f, 0.0f), Vector2(0.0f,1.0f) },
-        { Vector3(-1.0f, 1.0f, 1.0f),	Vector3(0.0f, 1.0f, 0.0f), Vector2(1.0f,1.0f) },
+        { Vector3(-1.0f, 1.0f,-1.0f), Vector2(1.0f, 0.0f),Vector3(0.0f, 1.0f, 0.0f) },  // 윗면이라 y전부 +1
+        { Vector3(1.0f, 1.0f,-1.0f), Vector2(0.0f, 0.0f),Vector3(0.0f, 1.0f, 0.0f) },
+        { Vector3(1.0f, 1.0f, 1.0f), Vector2(0.0f, 1.0f),Vector3(0.0f, 1.0f, 0.0f) },
+        { Vector3(-1.0f, 1.0f, 1.0f), Vector2(1.0f, 1.0f),Vector3(0.0f, 1.0f, 0.0f) },
 
-        // 아랫면 Normal Y -
-        { Vector3(-1.0f, -1.0f, -1.0f), Vector3(0.0f, -1.0f, 0.0f), Vector2(0.0f,0.0f) },		
-        { Vector3(1.0f, -1.0f, -1.0f),	Vector3(0.0f, -1.0f, 0.0f), Vector2(1.0f,0.0f) },
-        { Vector3(1.0f, -1.0f, 1.0f),	Vector3(0.0f, -1.0f, 0.0f), Vector2(1.0f,1.0f) },
-        { Vector3(-1.0f, -1.0f, 1.0f),	Vector3(0.0f, -1.0f, 0.0f), Vector2(0.0f,1.0f) },
+        { Vector3(-1.0f,-1.0f,-1.0f), Vector2(0.0f, 0.0f),Vector3(0.0f,-1.0f, 0.0f) },  // 아랫면이라 y전부 -1
+        { Vector3(1.0f,-1.0f,-1.0f), Vector2(1.0f, 0.0f),Vector3(0.0f,-1.0f, 0.0f) },
+        { Vector3(1.0f,-1.0f, 1.0f), Vector2(1.0f, 1.0f),Vector3(0.0f,-1.0f, 0.0f) },
+        { Vector3(-1.0f,-1.0f, 1.0f), Vector2(0.0f, 1.0f),Vector3(0.0f,-1.0f, 0.0f) },
 
-        // 좌측 옆면 Normal X -
-        { Vector3(-1.0f, -1.0f, 1.0f),	Vector3(-1.0f, 0.0f, 0.0f), Vector2(0.0f,1.0f) },
-        { Vector3(-1.0f, -1.0f, -1.0f), Vector3(-1.0f, 0.0f, 0.0f), Vector2(1.0f,1.0f) },
-        { Vector3(-1.0f, 1.0f, -1.0f),	Vector3(-1.0f, 0.0f, 0.0f), Vector2(1.0f,0.0f) },
-        { Vector3(-1.0f, 1.0f, 1.0f),	Vector3(-1.0f, 0.0f, 0.0f), Vector2(0.0f,0.0f) },
+        { Vector3(-1.0f,-1.0f, 1.0f), Vector2(0.0f, 1.0f),Vector3(-1.0f, 0.0f, 0.0f) },	// 왼쪽면 이라 x전부 -1
+        { Vector3(-1.0f,-1.0f,-1.0f), Vector2(1.0f, 1.0f),Vector3(-1.0f, 0.0f, 0.0f) },
+        { Vector3(-1.0f, 1.0f,-1.0f), Vector2(1.0f, 0.0f),Vector3(-1.0f, 0.0f, 0.0f) },
+        { Vector3(-1.0f, 1.0f, 1.0f), Vector2(0.0f, 0.0f),Vector3(-1.0f, 0.0f, 0.0f) },
 
-        // 우측 옆면 Normal X +
-        { Vector3(1.0f, -1.0f, 1.0f),	Vector3(1.0f, 0.0f, 0.0f), Vector2(1.0f,1.0f) },
-        { Vector3(1.0f, -1.0f, -1.0f),	Vector3(1.0f, 0.0f, 0.0f), Vector2(0.0f,1.0f) },
-        { Vector3(1.0f, 1.0f, -1.0f),	Vector3(1.0f, 0.0f, 0.0f), Vector2(0.0f,0.0f) },
-        { Vector3(1.0f, 1.0f, 1.0f),	Vector3(1.0f, 0.0f, 0.0f), Vector2(1.0f,0.0f) },
+        { Vector3(1.0f,-1.0f, 1.0f), Vector2(1.0f, 1.0f),Vector3(1.0f, 0.0f, 0.0f) },	// 오른쪽면 이라 x전부 +1
+        { Vector3(1.0f,-1.0f,-1.0f), Vector2(0.0f, 1.0f),Vector3(1.0f, 0.0f, 0.0f) },
+        { Vector3(1.0f, 1.0f,-1.0f), Vector2(0.0f, 0.0f),Vector3(1.0f, 0.0f, 0.0f) },
+        { Vector3(1.0f, 1.0f, 1.0f), Vector2(1.0f, 0.0f),Vector3(1.0f, 0.0f, 0.0f) },
 
-        // 정면 Normal Z -
-        { Vector3(-1.0f, -1.0f, -1.0f), Vector3(0.0f, 0.0f, -1.0f), Vector2(0.0f,1.0f) }, 
-        { Vector3(1.0f, -1.0f, -1.0f),	Vector3(0.0f, 0.0f, -1.0f), Vector2(1.0f,1.0f) },
-        { Vector3(1.0f, 1.0f, -1.0f),	Vector3(0.0f, 0.0f, -1.0f), Vector2(1.0f,0.0f) },
-        { Vector3(-1.0f, 1.0f, -1.0f),	Vector3(0.0f, 0.0f, -1.0f), Vector2(0.0f,0.0f) },
+        { Vector3(-1.0f,-1.0f,-1.0f), Vector2(0.0f, 1.0f),Vector3(0.0f, 0.0f,-1.0f) },  // 앞면이라 z전부 -1
+        { Vector3(1.0f,-1.0f,-1.0f), Vector2(1.0f, 1.0f),Vector3(0.0f, 0.0f,-1.0f) },
+        { Vector3(1.0f, 1.0f,-1.0f), Vector2(1.0f, 0.0f),Vector3(0.0f, 0.0f,-1.0f) },
+        { Vector3(-1.0f, 1.0f,-1.0f), Vector2(0.0f, 0.0f),Vector3(0.0f, 0.0f,-1.0f) },
 
-        // 뒷면 Normal Z +
-        { Vector3(-1.0f, -1.0f, 1.0f),	Vector3(0.0f, 0.0f, 1.0f), Vector2(1.0f,1.0f) },
-        { Vector3(1.0f, -1.0f, 1.0f),	Vector3(0.0f, 0.0f, 1.0f), Vector2(0.0f,1.0f) },
-        { Vector3(1.0f, 1.0f, 1.0f),	Vector3(0.0f, 0.0f, 1.0f), Vector2(1.0f,0.0f) },
-        { Vector3(-1.0f, 1.0f, 1.0f),	Vector3(0.0f, 0.0f, 1.0f), Vector2(1.0f,0.0f) },
+        { Vector3(-1.0f,-1.0f, 1.0f), Vector2(1.0f, 1.0f),Vector3(0.0f, 0.0f, 1.0f) },	//뒷면이라 z전부 +1
+        { Vector3(1.0f,-1.0f, 1.0f), Vector2(0.0f, 1.0f),Vector3(0.0f, 0.0f, 1.0f) },
+        { Vector3(1.0f, 1.0f, 1.0f), Vector2(0.0f, 0.0f),Vector3(0.0f, 0.0f, 1.0f) },
+        { Vector3(-1.0f, 1.0f, 1.0f), Vector2(1.0f, 0.0f),Vector3(0.0f, 0.0f, 1.0f) },
     };
 
     D3D11_BUFFER_DESC bd = {};
@@ -343,8 +376,8 @@ bool DemoApp::InitScene()
     D3D11_INPUT_ELEMENT_DESC layout[] =
     {
         {"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0},
-        { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 24, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-        {"NORMAL",    0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0}
+        { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+        {"NORMAL",    0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0}
     };
 
     HR_T(m_Device->CreateInputLayout(layout, ARRAYSIZE(layout), vertexShaderBuffer->GetBufferPointer(), vertexShaderBuffer->GetBufferSize(), &m_InputLayout));
@@ -441,14 +474,14 @@ bool DemoApp::InitScene()
     m_WorldMatrix = XMMatrixIdentity();
 
     // 뷰 매트릭스 초기화
-    m_Eye = XMVectorSet(0.0f, 1.0f, -8.0f, 0.0f);
+    m_Eye = XMVectorSet(0.0f, 0.0f, -200.0f, 0.0f);
     m_At = XMVectorSet(0.0f, 0.0f, 0.1f, 0.0f);
     m_Up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
 
     m_ViewMatrix = XMMatrixLookToLH(m_Eye, m_At, m_Up);
 
     // 프로젝션 매트릭스 초기화
-    m_ProjectionMatrix = XMMatrixPerspectiveFovLH(XM_PIDIV4, m_ClientWidth / (FLOAT)m_ClientHeight, 0.01f, 100.0f);
+    m_ProjectionMatrix = XMMatrixPerspectiveFovLH(XM_PIDIV4, m_ClientWidth / (FLOAT)m_ClientHeight, 0.01f, 20000.0f);
     return true;
 }
 

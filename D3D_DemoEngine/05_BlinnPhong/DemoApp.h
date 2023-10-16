@@ -9,8 +9,8 @@ using namespace DirectX;
 struct Vertex
 {
     Vector3 Pos;
-    Vector3 Nor;
     Vector2 Tex;
+    Vector3 Nor;
 };
 
 struct CB_Transform
@@ -23,11 +23,11 @@ struct CB_Transform
 struct CB_DirectionalLight
 {
     Vector3 Direction = { 0.0f,0.0f,1.0f };
+    float DL_pad0;
     Vector4 Ambient = { 0.1f,0.1f,0.1f,0.1f };
     Vector4 Diffuse = { 1.0f,1.0f,1.0f,1.0f };
     Vector4 Specular = { 1.0f,1.0f,1.0f,1.0f };
     Vector3 EyePosition;
-    float pad0;
     bool UseBlinnPhong = false;
 };
 
@@ -38,8 +38,8 @@ struct CB_Material
     Vector4 Ambient = { 1.0f,1.0f,1.0f,1.0f };
     Vector4 Diffuse = { 1.0f,1.0f,1.0f,1.0f };
     Vector4 Specular = { 1.0f,1.0f,1.0f,1.0f };
-    float SpecularPower = 3000;
-    Vector3 dummy;
+    float SpecularPower = 1000;
+    Vector3 MT_pad0;
 };
 
 class DemoApp :
@@ -79,9 +79,9 @@ public:
     Matrix m_ProjectionMatrix;                              // 단위장치좌표계(Normalized Device Coordinate) 공간으로 변환을 위한 행렬
 
     CB_Transform m_Transform;
-    CB_DirectionalLight m_Material;
+    CB_Material m_Material;
     CB_DirectionalLight m_Light;
-    float m_MeshScale = 100.0f;
+    float m_MeshScale = 50.0f;
 
     const float m_ClearColor[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
     Vector2 m_Rotation = { 0.0f, 0.0f };
@@ -90,7 +90,8 @@ public:
     bool m_IsCubePropertiesWindow = false;
     bool m_IsCameraPropertiesWindow = false;
 
-    float m_CubeYaw = 1.0f;
+    float m_CubeRotationX = 0.0f;
+    float m_CubeRotationY = 0.0f;
 
     float m_CameraFovYRadius;
     float m_CameraNear;
