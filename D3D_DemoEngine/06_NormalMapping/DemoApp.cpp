@@ -83,6 +83,7 @@ void DemoApp::Render()
     m_DeviceContext->PSSetConstantBuffers(2, 1, &m_CBMaterial);
     m_DeviceContext->PSSetShaderResources(0, 1, &m_TextureRV);
     m_DeviceContext->PSSetShaderResources(1, 1, &m_NormalRV);
+    m_DeviceContext->PSSetShaderResources(2, 1, &m_SpecularRV);
     m_DeviceContext->PSSetSamplers(0, 1, &m_SamplerLinear);
 
     // Cube, Lighting matrix 를 m_Transform 에 설정
@@ -178,7 +179,11 @@ void DemoApp::Render()
 
             ImGui::Text("Use Normal Map");
             ImGui::SameLine();
-            ImGui::Checkbox("##buse", &m_Light.UseNormalMap);
+            ImGui::Checkbox("##bNormalMap", (bool*)& m_Light.UseNormalMap);
+
+            ImGui::Text("Use Specular Map");
+            ImGui::SameLine();
+            ImGui::Checkbox("##bSpecularMap", (bool*)&m_Light.UseSpecularMap);
 
             ImGui::Text("[Directional Light]");
             ImGui::Text("Light Direction");
@@ -465,6 +470,7 @@ bool DemoApp::InitScene()
     // 텍스처 로드
     HR_T(CreateWICTextureFromFile(m_Device, L"../Resource/Brick_Color.jpg", nullptr, &m_TextureRV));
     HR_T(CreateWICTextureFromFile(m_Device, L"../Resource/Brick_Normal.jpg", nullptr, &m_NormalRV));
+    HR_T(CreateWICTextureFromFile(m_Device, L"../Resource/Brick_Specular.png", nullptr, &m_SpecularRV));
 
     // Sample state 생성
     D3D11_SAMPLER_DESC sampDesc = {};
@@ -498,6 +504,7 @@ void DemoApp::UnInitScene()
 {
     SAFE_RELEASE(m_TextureRV);
     SAFE_RELEASE(m_NormalRV);
+    SAFE_RELEASE(m_SpecularRV);
 
     SAFE_RELEASE(m_CBTransform);
     SAFE_RELEASE(m_CBDirectionalLight);

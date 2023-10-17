@@ -39,12 +39,20 @@ float4 main(PS_INPUT input) : SV_Target
     // 따라서 부호를 맞춰주기 위해 vLightDirection에 -를 곱해준다.
     float4 Diffuse = dot(Normal, -vLightDirection) * DiffuseColor;
 
+    // Specular Map
+    // Specular Map용 이미지에서 물체에 비출 빛들의 강도를 가져옴
+    float SpecularIntensity=1;
+    if(UseSpecularMap)
+    {
+        SpecularIntensity = txSpecular.Sample(samLinear, input.Texcoord).r;
+    }
+
     // Specular Light
     // Blinn Phong
     float4 Specular;
     float3 HalfVector = normalize(-vLightDirection + View);
     float fHDotN = max(0.0f, dot(HalfVector, Normal));
-    float4 BlinnPhong = pow(fHDotN, MaterialSpecularPower) * MaterialSpecular * LightSpecular;
+    float4 BlinnPhong = pow(fHDotN, MaterialSpecularPower) * MaterialSpecular * LightSpecular * SpecularIntensity;
     Specular = BlinnPhong;
 
     // 구성요소를 곱하면 값이 조절되는 것이지 합쳐지지 않음

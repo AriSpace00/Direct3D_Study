@@ -29,7 +29,9 @@ struct CB_DirectionalLight
     Vector4 Diffuse = { 1.0f,1.0f,1.0f,1.0f };
     Vector4 Specular = { 1.0f,1.0f,1.0f,1.0f };
     Vector3 EyePosition;
-    bool UseNormalMap = true;
+    int UseNormalMap = true;
+    int UseSpecularMap = true;
+    Vector3 DL_pad1;
 };
 
 static_assert((sizeof(CB_DirectionalLight) % 16) == 0, "Constant Buffer size must be 16-byte aligned");
@@ -69,6 +71,7 @@ public:
     int m_Indices = 0;                                      // 인덱스 개수
     ID3D11ShaderResourceView* m_TextureRV = nullptr;        // 텍스처 리소스 뷰
     ID3D11ShaderResourceView* m_NormalRV = nullptr;         // 텍스처 노말맵 리소스 뷰
+    ID3D11ShaderResourceView* m_SpecularRV = nullptr;         // 텍스처 스펙큘러맵 리소스 뷰
     ID3D11SamplerState* m_SamplerLinear = nullptr;          // 샘플러 상태
 
     ID3D11Buffer* m_CBMaterial = nullptr;                   // 상수 버퍼: 변환행렬

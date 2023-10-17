@@ -1,5 +1,6 @@
 Texture2D txDiffuse : register(t0);
 Texture2D txNormal : register(t1);
+Texture2D txSpecular : register(t2);
 SamplerState samLinear : register(s0);
 
 cbuffer Transform : register(b0)
@@ -17,7 +18,8 @@ cbuffer DirectionLight : register(b1)
     float4 LightDiffuse;
     float4 LightSpecular;
     float3 EyePosition;
-    bool UseNormalMap;
+    int UseNormalMap;
+    int UseSpecularMap;
 }
 
 cbuffer Material : register(b2)
