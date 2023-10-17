@@ -14,9 +14,9 @@ using namespace DirectX::SimpleMath;
 
 struct Vertex
 {
-    Vector3 Pos;
-    Vector3 Nor;
-    Vector2 Tex;
+    Vector3 Position;
+    Vector3 Normal;
+    Vector2 Texcoord;
 };
 
 struct ConstantBuffer

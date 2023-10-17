@@ -8,9 +8,9 @@ using namespace DirectX;
 
 struct Vertex
 {
-    Vector3 Pos;
-    Vector2 Tex;
-    Vector3 Nor;
+    Vector3 Position;
+    Vector2 Texcoord;
+    Vector3 Normal;
 };
 
 struct CB_Transform

@@ -8,9 +8,10 @@ using namespace DirectX;
 
 struct Vertex
 {
-    Vector3 Pos;
-    Vector2 Tex;
-    Vector3 Nor;
+    Vector3 Position;
+    Vector2 Texcoord;
+    Vector3 Normal;
+    Vector3 Tangent;
 };
 
 struct CB_Transform
@@ -28,7 +29,7 @@ struct CB_DirectionalLight
     Vector4 Diffuse = { 1.0f,1.0f,1.0f,1.0f };
     Vector4 Specular = { 1.0f,1.0f,1.0f,1.0f };
     Vector3 EyePosition;
-    bool UseBlinnPhong = false;
+    bool UseNormalMap = true;
 };
 
 static_assert((sizeof(CB_DirectionalLight) % 16) == 0, "Constant Buffer size must be 16-byte aligned");
@@ -67,6 +68,7 @@ public:
     ID3D11Buffer* m_IndexBuffer = nullptr;                  // 인덱스 버퍼
     int m_Indices = 0;                                      // 인덱스 개수
     ID3D11ShaderResourceView* m_TextureRV = nullptr;        // 텍스처 리소스 뷰
+    ID3D11ShaderResourceView* m_NormalRV = nullptr;         // 텍스처 노말맵 리소스 뷰
     ID3D11SamplerState* m_SamplerLinear = nullptr;          // 샘플러 상태
 
     ID3D11Buffer* m_CBMaterial = nullptr;                   // 상수 버퍼: 변환행렬
@@ -86,9 +88,6 @@ public:
     const float m_ClearColor[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
     Vector2 m_Rotation = { 0.0f, 0.0f };
     Vector3 m_CameraPos = { 0.0f, 0.0f, -1000.0f };
-
-    bool m_IsCubePropertiesWindow = false;
-    bool m_IsCameraPropertiesWindow = false;
 
     float m_CubeRotationX = 0.0f;
     float m_CubeRotationY = 0.0f;

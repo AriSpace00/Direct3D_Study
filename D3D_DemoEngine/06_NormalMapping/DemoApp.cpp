@@ -2,7 +2,7 @@
 #include "../Common/Helper.h"
 #include <d3dcompiler.h>
 #include <Directxtk/DDSTextureLoader.h>
-#include <cmath>
+#include <Directxtk/WICTextureLoader.h>
 #include <imgui.h>
 #include <imgui_impl_win32.h>
 #include <imgui_impl_dx11.h>
@@ -82,6 +82,7 @@ void DemoApp::Render()
     m_DeviceContext->PSSetConstantBuffers(1, 1, &m_CBDirectionalLight);
     m_DeviceContext->PSSetConstantBuffers(2, 1, &m_CBMaterial);
     m_DeviceContext->PSSetShaderResources(0, 1, &m_TextureRV);
+    m_DeviceContext->PSSetShaderResources(1, 1, &m_NormalRV);
     m_DeviceContext->PSSetSamplers(0, 1, &m_SamplerLinear);
 
     // Cube, Lighting matrix 를 m_Transform 에 설정
@@ -175,9 +176,9 @@ void DemoApp::Render()
         {
             ImGui::Begin("Light Properties");
 
-            ImGui::Text("Use Blinn Phong");
+            ImGui::Text("Use Normal Map");
             ImGui::SameLine();
-            ImGui::Checkbox("##buse", &m_Light.UseBlinnPhong);
+            ImGui::Checkbox("##buse", &m_Light.UseNormalMap);
 
             ImGui::Text("[Directional Light]");
             ImGui::Text("Light Direction");
@@ -313,32 +314,38 @@ bool DemoApp::InitScene()
     // 정육면체
     Vertex vertices[] =
     {
-        { Vector3(-1.0f, 1.0f,-1.0f), Vector2(1.0f, 0.0f),Vector3(0.0f, 1.0f, 0.0f) },  // 윗면이라 y전부 +1
+        // 윗면이라 y전부 +1
+        { Vector3(-1.0f, 1.0f,-1.0f), Vector2(1.0f, 0.0f),Vector3(0.0f, 1.0f, 0.0f) },  
         { Vector3(1.0f, 1.0f,-1.0f), Vector2(0.0f, 0.0f),Vector3(0.0f, 1.0f, 0.0f) },
         { Vector3(1.0f, 1.0f, 1.0f), Vector2(0.0f, 1.0f),Vector3(0.0f, 1.0f, 0.0f) },
         { Vector3(-1.0f, 1.0f, 1.0f), Vector2(1.0f, 1.0f),Vector3(0.0f, 1.0f, 0.0f) },
 
-        { Vector3(-1.0f,-1.0f,-1.0f), Vector2(0.0f, 0.0f),Vector3(0.0f,-1.0f, 0.0f) },  // 아랫면이라 y전부 -1
+        // 아랫면이라 y전부 -1
+        { Vector3(-1.0f,-1.0f,-1.0f), Vector2(0.0f, 0.0f),Vector3(0.0f,-1.0f, 0.0f) },  
         { Vector3(1.0f,-1.0f,-1.0f), Vector2(1.0f, 0.0f),Vector3(0.0f,-1.0f, 0.0f) },
         { Vector3(1.0f,-1.0f, 1.0f), Vector2(1.0f, 1.0f),Vector3(0.0f,-1.0f, 0.0f) },
         { Vector3(-1.0f,-1.0f, 1.0f), Vector2(0.0f, 1.0f),Vector3(0.0f,-1.0f, 0.0f) },
 
-        { Vector3(-1.0f,-1.0f, 1.0f), Vector2(0.0f, 1.0f),Vector3(-1.0f, 0.0f, 0.0f) },	// 왼쪽면 이라 x전부 -1
+        // 왼쪽면 이라 x전부 - 1
+        { Vector3(-1.0f,-1.0f, 1.0f), Vector2(0.0f, 1.0f),Vector3(-1.0f, 0.0f, 0.0f) },	
         { Vector3(-1.0f,-1.0f,-1.0f), Vector2(1.0f, 1.0f),Vector3(-1.0f, 0.0f, 0.0f) },
         { Vector3(-1.0f, 1.0f,-1.0f), Vector2(1.0f, 0.0f),Vector3(-1.0f, 0.0f, 0.0f) },
         { Vector3(-1.0f, 1.0f, 1.0f), Vector2(0.0f, 0.0f),Vector3(-1.0f, 0.0f, 0.0f) },
 
-        { Vector3(1.0f,-1.0f, 1.0f), Vector2(1.0f, 1.0f),Vector3(1.0f, 0.0f, 0.0f) },	// 오른쪽면 이라 x전부 +1
+        // 오른쪽면 이라 x전부 +1
+        { Vector3(1.0f,-1.0f, 1.0f), Vector2(1.0f, 1.0f),Vector3(1.0f, 0.0f, 0.0f) },	
         { Vector3(1.0f,-1.0f,-1.0f), Vector2(0.0f, 1.0f),Vector3(1.0f, 0.0f, 0.0f) },
         { Vector3(1.0f, 1.0f,-1.0f), Vector2(0.0f, 0.0f),Vector3(1.0f, 0.0f, 0.0f) },
         { Vector3(1.0f, 1.0f, 1.0f), Vector2(1.0f, 0.0f),Vector3(1.0f, 0.0f, 0.0f) },
 
-        { Vector3(-1.0f,-1.0f,-1.0f), Vector2(0.0f, 1.0f),Vector3(0.0f, 0.0f,-1.0f) },  // 앞면이라 z전부 -1
-        { Vector3(1.0f,-1.0f,-1.0f), Vector2(1.0f, 1.0f),Vector3(0.0f, 0.0f,-1.0f) },
-        { Vector3(1.0f, 1.0f,-1.0f), Vector2(1.0f, 0.0f),Vector3(0.0f, 0.0f,-1.0f) },
-        { Vector3(-1.0f, 1.0f,-1.0f), Vector2(0.0f, 0.0f),Vector3(0.0f, 0.0f,-1.0f) },
+        // 앞면이라 z전부 -1
+        { Vector3(-1.0f,-1.0f,-1.0f), Vector2(0.0f, 1.0f),Vector3(0.0f, 0.0f,-1.0f), Vector3(1.0f, 0.0f, 0.0f)},
+        { Vector3(1.0f,-1.0f,-1.0f), Vector2(1.0f, 1.0f),Vector3(0.0f, 0.0f,-1.0f), Vector3(1.0f, 0.0f, 0.0f) },
+        { Vector3(1.0f, 1.0f,-1.0f), Vector2(1.0f, 0.0f),Vector3(0.0f, 0.0f,-1.0f), Vector3(1.0f, 0.0f, 0.0f) },
+        { Vector3(-1.0f, 1.0f,-1.0f), Vector2(0.0f, 0.0f),Vector3(0.0f, 0.0f,-1.0f), Vector3(1.0f, 0.0f, 0.0f) },
 
-        { Vector3(-1.0f,-1.0f, 1.0f), Vector2(1.0f, 1.0f),Vector3(0.0f, 0.0f, 1.0f) },	//뒷면이라 z전부 +1
+        // 뒷면이라 z전부 +1
+        { Vector3(-1.0f,-1.0f, 1.0f), Vector2(1.0f, 1.0f),Vector3(0.0f, 0.0f, 1.0f) },	
         { Vector3(1.0f,-1.0f, 1.0f), Vector2(0.0f, 1.0f),Vector3(0.0f, 0.0f, 1.0f) },
         { Vector3(1.0f, 1.0f, 1.0f), Vector2(0.0f, 0.0f),Vector3(0.0f, 0.0f, 1.0f) },
         { Vector3(-1.0f, 1.0f, 1.0f), Vector2(1.0f, 0.0f),Vector3(0.0f, 0.0f, 1.0f) },
@@ -377,7 +384,8 @@ bool DemoApp::InitScene()
     {
         {"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0},
         { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-        {"NORMAL",    0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0}
+        {"NORMAL",    0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
+        {"TANGENT",    0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0}
     };
 
     HR_T(m_Device->CreateInputLayout(layout, ARRAYSIZE(layout), vertexShaderBuffer->GetBufferPointer(), vertexShaderBuffer->GetBufferSize(), &m_InputLayout));
@@ -455,7 +463,8 @@ bool DemoApp::InitScene()
     HR_T(m_Device->CreateBuffer(&bd, nullptr, &m_CBMaterial));
 
     // 텍스처 로드
-    HR_T(CreateDDSTextureFromFile(m_Device, L"../Resource/fluid.dds", nullptr, &m_TextureRV));
+    HR_T(CreateWICTextureFromFile(m_Device, L"../Resource/Brick_Color.jpg", nullptr, &m_TextureRV));
+    HR_T(CreateWICTextureFromFile(m_Device, L"../Resource/Brick_Normal.jpg", nullptr, &m_NormalRV));
 
     // Sample state 생성
     D3D11_SAMPLER_DESC sampDesc = {};
@@ -487,6 +496,9 @@ bool DemoApp::InitScene()
 
 void DemoApp::UnInitScene()
 {
+    SAFE_RELEASE(m_TextureRV);
+    SAFE_RELEASE(m_NormalRV);
+
     SAFE_RELEASE(m_CBTransform);
     SAFE_RELEASE(m_CBDirectionalLight);
     SAFE_RELEASE(m_CBMaterial);

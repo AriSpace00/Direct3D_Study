@@ -1,4 +1,5 @@
 Texture2D txDiffuse : register(t0);
+Texture2D txNormal : register(t1);
 SamplerState samLinear : register(s0);
 
 cbuffer Transform : register(b0)
@@ -16,7 +17,7 @@ cbuffer DirectionLight : register(b1)
     float4 LightDiffuse;
     float4 LightSpecular;
     float3 EyePosition;
-    bool UseBlinnPhong;
+    bool UseNormalMap;
 }
 
 cbuffer Material : register(b2)
@@ -33,6 +34,7 @@ struct VS_INPUT
     float4 PosModel : POSITION;
     float2 Texcoord : TEXCOORD0;
     float3 NorModel : NORMAL;
+    float3 TanModel : TANGENT;
 };
 
 struct PS_INPUT
@@ -41,5 +43,6 @@ struct PS_INPUT
     float3 PosWorld : POSITION;
     float2 Texcoord : TEXCOORD0;
     float3 NorWorld : NORMAL;
+    float3 TanWorld : TANGENT;
 };
 
