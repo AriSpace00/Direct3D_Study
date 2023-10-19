@@ -4,6 +4,8 @@ float4 main(PS_INPUT input) : SV_Target
 {
     float4 finalColor = 0;
 
+    float Opacity = 1.0f;
+
     // 물체로부터 뻗어나가는 노멀 방향만 남기기 위해 노멀라이즈
     float3 Normal = normalize(input.NorWorld);
 
@@ -28,17 +30,21 @@ float4 main(PS_INPUT input) : SV_Target
 
     // Ambient Light
     // 모든 물체에 적용하는 바탕 색 * 물체가 Ambient를 조절하는 색
-    float4 Ambient = LightAmbient * MaterialAmbient;
+    float4 AmbientLight = LightAmbient * MaterialAmbient;
 
-    // 텍스처
-    float4 Texture = txDiffuse.Sample(samLinear, input.Texcoord);
+    // Diffuse
+    float4 Diffuse = txDiffuse.Sample(samLinear, input.Texcoord);
 
     // Diffuse Light(Lambertian Lighting)
-    float4 DiffuseColor = LightDiffuse * MaterialDiffuse * Texture;
-    // 방향이 다른 두 벡터(Normal, vLightDirection)을 내적하면 음수가 도출된다.
-    // 따라서 부호를 맞춰주기 위해 vLightDirection에 -를 곱해준다.
-    float4 Diffuse = dot(Normal, -vLightDirection) * DiffuseColor;
-
+    float4 DiffuseColor = LightDiffuse * MaterialDiffuse * Diffuse;
+    float4 DiffuseLight = dot(Normal, -vLightDirection);
+    if(UseDiffuseMap)
+    {
+        // 방향이 다른 두 벡터(Normal, vLightDirection)을 내적하면 음수가 도출된다.
+        // 따라서 부호를 맞춰주기 위해 vLightDirection에 -를 곱해준다.
+        DiffuseLight *= DiffuseColor;
+    }
+    
     // Specular Map
     // Specular Map용 이미지에서 물체에 비출 빛들의 강도를 가져옴
     float SpecularIntensity = 1;
@@ -49,15 +55,26 @@ float4 main(PS_INPUT input) : SV_Target
 
     // Specular Light
     // Blinn Phong
-    float4 Specular;
+    float4 SpecularLight;
     float3 HalfVector = normalize(-vLightDirection + View);
     float fHDotN = max(0.0f, dot(HalfVector, Normal));
     float4 BlinnPhong = pow(fHDotN, MaterialSpecularPower) * MaterialSpecular * LightSpecular * SpecularIntensity;
-    Specular = BlinnPhong;
+    SpecularLight = BlinnPhong;
+
+    float4 Emissive = 0;
+    if(UseEmissiveMap)
+    {
+        Emissive = txEmissive.Sample(samLinear, input.Texcoord) * MaterialEmissive;
+    }
+
+    if(UseOpacityMap)
+    {
+        Opacity = txOpacity.Sample(samLinear, input.Texcoord).a;
+    }
 
     // 구성요소를 곱하면 값이 조절되는 것이지 합쳐지지 않음
     // 따라서 곱셈이 아닌 덧셈으로 각 구성요소를 결합함
-    finalColor = saturate(Ambient + Diffuse + Specular);
+    finalColor = saturate(AmbientLight + DiffuseLight + SpecularLight + Emissive);
 
-    return finalColor;
+    return float4(finalColor.rgb, Opacity);
 }

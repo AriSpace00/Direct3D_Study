@@ -1,18 +1,12 @@
 #pragma once
 #include <d3d11.h>
-#include "../Common/GameApp.h"
 #include <directxtk/SimpleMath.h>
+#include "../Common/GameApp.h"
+#include "../Common/Mesh.h"
+#include "../Common/Material.h"
 
 using namespace DirectX::SimpleMath;
 using namespace DirectX;
-
-struct Vertex
-{
-    Vector3 Position;
-    Vector2 Texcoord;
-    Vector3 Normal;
-    Vector3 Tangent;
-};
 
 struct CB_Transform
 {
@@ -29,9 +23,7 @@ struct CB_DirectionalLight
     Vector4 Diffuse = { 1.0f,1.0f,1.0f,1.0f };
     Vector4 Specular = { 1.0f,1.0f,1.0f,1.0f };
     Vector3 EyePosition;
-    int UseNormalMap = true;
-    int UseSpecularMap = true;
-    Vector3 DL_pad1;
+    float DL_pad1;
 };
 
 static_assert((sizeof(CB_DirectionalLight) % 16) == 0, "Constant Buffer size must be 16-byte aligned");
@@ -41,8 +33,20 @@ struct CB_Material
     Vector4 Ambient = { 1.0f,1.0f,1.0f,1.0f };
     Vector4 Diffuse = { 1.0f,1.0f,1.0f,1.0f };
     Vector4 Specular = { 1.0f,1.0f,1.0f,1.0f };
-    float SpecularPower = 1000;
-    Vector3 MT_pad0;
+    Vector4 Emissive = { 1.0f,1.0f,1.0f,1.0f };
+    float SpecularPower = 80;
+    bool UseDiffuseMap = true;
+    bool MT_pad0[3];
+    bool UseNormalMap = true;
+    bool MT_pad1[3];
+    bool UseSpecularMap = true;
+    bool MT_pad2[3];
+    bool UseEmissiveMap = true;
+    bool MT_pad3[3];
+    bool UseOpacityMap = true;
+    bool MT_pad4[3];
+    Vector2 MT_pad5;
+    
 };
 
 class DemoApp :
@@ -62,22 +66,16 @@ public:
     // 렌더링 파이프라인에 적용하는 객체와 정보
     ID3D11VertexShader* m_VertexShader = nullptr;           // 정점 셰이더
     ID3D11PixelShader* m_PixelShader = nullptr;             // 픽셀 셰이더
-    ID3D11PixelShader* m_PixelShaderSolid = nullptr;        // 픽셀 셰이더 라이트 표시용
     ID3D11InputLayout* m_InputLayout = nullptr;             // 입력 레이아웃
-    ID3D11Buffer* m_VertexBuffer = nullptr;                 // 버텍스 버퍼
-    UINT m_VertexBufferStride = 0;                          // 버텍스 하나의 크기
-    UINT m_VertexBufferOffset = 0;                          // 버텍스 버퍼의 오프셋
-    ID3D11Buffer* m_IndexBuffer = nullptr;                  // 인덱스 버퍼
-    int m_Indices = 0;                                      // 인덱스 개수
-    ID3D11ShaderResourceView* m_TextureRV = nullptr;        // 텍스처 리소스 뷰
-    ID3D11ShaderResourceView* m_NormalRV = nullptr;         // 텍스처 노말맵 리소스 뷰
-    ID3D11ShaderResourceView* m_SpecularRV = nullptr;         // 텍스처 스펙큘러맵 리소스 뷰
     ID3D11SamplerState* m_SamplerLinear = nullptr;          // 샘플러 상태
+    ID3D11BlendState* m_AlphaBlendState = nullptr;          // 샘플러 상태
 
     ID3D11Buffer* m_CBMaterial = nullptr;                   // 상수 버퍼: 변환행렬
     ID3D11Buffer* m_CBTransform = nullptr;                  // 상수 버퍼: 변환행렬
     ID3D11Buffer* m_CBDirectionalLight = nullptr;           // 상수 버퍼: 방향광
-    ID3D11Buffer* m_CBRotation = nullptr;                   // 상수 버퍼: 회전
+
+    UINT m_VertexBufferStride = 0;						    // 버텍스 하나의 크기.
+    UINT m_VertexBufferOffset = 0;						    // 버텍스 버퍼의 오프셋.
 
     Matrix m_WorldMatrix;                                   // 월드좌표계 공간으로 변환을 위한 행렬
     Matrix m_ViewMatrix;                                    // 카메라좌표계(뷰좌표계) 공간으로 변환을 위한 행렬
@@ -86,10 +84,12 @@ public:
     CB_Transform m_Transform;
     CB_Material m_Material;
     CB_DirectionalLight m_Light;
-    float m_MeshScale = 50.0f;
+    float m_MeshScale = 1.0f;
+
+    vector<Mesh> m_Meshes;
+    vector<Material> m_Materials;
 
     const float m_ClearColor[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
-    Vector2 m_Rotation = { 0.0f, 0.0f };
     Vector3 m_CameraPos = { 0.0f, 0.0f, -1000.0f };
 
     float m_CubeRotationX = 0.0f;
