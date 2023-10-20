@@ -104,6 +104,8 @@ public:
 
     std::wstring m_FBXFileName;
 
+    int m_FBXModelIndex = 6;
+
 public:
     virtual bool Initialize(UINT width, UINT height);
     virtual void Update();

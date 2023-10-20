@@ -17,6 +17,13 @@
 
 using namespace DirectX::SimpleMath;
 
+static bool IsDiffuseExist;
+static bool IsNormalExist;
+static bool IsSpecularExist;
+static bool IsEmissiveExist;
+static bool IsOpacityExist;
+
+
 DemoApp::DemoApp(HINSTANCE hInstance)
     : GameApp(hInstance)
     , m_CameraNear(0.01f)
@@ -103,6 +110,28 @@ void DemoApp::Render()
         m_DeviceContext->PSSetShaderResources(2, 1, &m_Materials[mi].m_SpecularRV);
         m_DeviceContext->PSSetShaderResources(3, 1, &m_Materials[mi].m_EmissiveRV);
         m_DeviceContext->PSSetShaderResources(4, 1, &m_Materials[mi].m_OpacityRV);
+
+
+        if (m_Materials[mi].m_DiffuseRV != nullptr)
+        {
+            IsDiffuseExist = true;
+        }
+        if (m_Materials[mi].m_NormalRV != nullptr)
+        {
+            IsNormalExist = true;
+        }
+        if (m_Materials[mi].m_SpecularRV != nullptr)
+        {
+            IsSpecularExist = true;
+        }
+        if (m_Materials[mi].m_EmissiveRV != nullptr)
+        {
+            IsEmissiveExist = true;
+        }
+        if (m_Materials[mi].m_OpacityRV != nullptr)
+        {
+            IsOpacityExist = true;
+        }
 
         m_Material.UseDiffuseMap = m_Materials[mi].m_DiffuseRV != nullptr ? true : false;
         m_Material.UseNormalMap = m_Materials[mi].m_NormalRV != nullptr ? true : false;
@@ -205,29 +234,40 @@ void DemoApp::Render()
         {
             ImGui::Begin("Light Properties");
 
-            ImGui::Text("Use Diffuse Map");
-            ImGui::SameLine();
-            ImGui::Checkbox("##bDiffuseMap", &m_Material.UseDiffuseMap);
-            if(!m_Material.UseDiffuseMap)
+            /*if(IsDiffuseExist)
             {
-                auto test = 0;
+                ImGui::Text("Use Diffuse Map");
+                ImGui::SameLine();
+                ImGui::Checkbox("##bDiffuseMap", &m_Material.UseDiffuseMap);
             }
 
-            ImGui::Text("Use Normal Map");
-            ImGui::SameLine();
-            ImGui::Checkbox("##bNormalMap", &m_Material.UseNormalMap);
+            if(IsNormalExist)
+            {
+                ImGui::Text("Use Normal Map");
+                ImGui::SameLine();
+                ImGui::Checkbox("##bNormalMap", &m_Material.UseNormalMap);
+            }
+            
+            if(IsSpecularExist)
+            {
+                ImGui::Text("Use Specular Map");
+                ImGui::SameLine();
+                ImGui::Checkbox("##bSpecularMap", &m_Material.UseSpecularMap);
+            }
+            
+            if(IsEmissiveExist)
+            {
+                ImGui::Text("Use Emissive Map");
+                ImGui::SameLine();
+                ImGui::Checkbox("##bEmissiveMap", &m_Material.UseEmissiveMap);
+            }
 
-            ImGui::Text("Use Specular Map");
-            ImGui::SameLine();
-            ImGui::Checkbox("##bSpecularMap", &m_Material.UseSpecularMap);
-
-            ImGui::Text("Use Emissive Map");
-            ImGui::SameLine();
-            ImGui::Checkbox("##bEmissiveMap", &m_Material.UseEmissiveMap);
-
-            ImGui::Text("Use Opacity Map");
-            ImGui::SameLine();
-            ImGui::Checkbox("##bOpacityMap", &m_Material.UseOpacityMap);
+            if(IsOpacityExist)
+            {
+                ImGui::Text("Use Opacity Map");
+                ImGui::SameLine();
+                ImGui::Checkbox("##bOpacityMap", &m_Material.UseOpacityMap);
+            }*/
 
             ImGui::Text("[Directional Light]");
             ImGui::Text("Light Direction");
@@ -251,6 +291,25 @@ void DemoApp::Render()
 
             ImGui::End();
         }
+
+        // 4. 모델링 변경 윈도우
+        /*ImGui::SetNextWindowSize(ImVec2(200, 200));
+        ImGui::SetNextWindowPos(ImVec2(1720, 0));
+        {
+            ImGui::Begin("Model Change Window");
+
+            ImGui::Text("Mdoel Index");
+            ImGui::Text("0 : box");
+            ImGui::Text("1 : Character");
+            ImGui::Text("2 : IcoSphere");
+            ImGui::Text("3 : Monkey");
+            ImGui::Text("4 : Torus");
+            ImGui::Text("5 : Tree");
+            ImGui::Text("6 : zeldaPosed001");
+
+            m_FBXModelIndex = ImGui::SliderFloat("##mi", (float*)& m_FBXModelIndex, 0.0f, 6.0f);
+            ImGui::End();
+        }*/
 
         ImGui::Render();
         ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
@@ -469,7 +528,48 @@ bool DemoApp::InitScene()
         aiProcess_ConvertToLeftHanded;
 
     // FBX 파일 경로 지정, 파일 이름 분리
-    std::string filePath = "../Resource/FBXLoad_Test/fbx/box.fbx";
+    std::string box = "../Resource/FBXLoad_Test/fbx/box.fbx";
+    std::string charcter = "../Resource/FBXLoad_Test/fbx/Character.fbx";
+    std::string icosphere = "../Resource/FBXLoad_Test/fbx/IcoSphere.fbx";
+    std::string monkey = "../Resource/FBXLoad_Test/fbx/Monkey.fbx";
+    std::string torus = "../Resource/FBXLoad_Test/fbx/Torus.fbx";
+    std::string tree = "../Resource/FBXLoad_Test/fbx/Tree.fbx";
+    std::string zelda = "../Resource/FBXLoad_Test/fbx/zeldaPosed001.fbx";
+    
+    std::string filePath;
+
+    switch(m_FBXModelIndex)
+    {
+    case 0:
+    {
+        filePath = box;
+    }
+    case 1:
+    {
+        filePath = charcter;
+    }
+    case 2:
+    {
+        filePath = icosphere;
+    }
+    case 3:
+    {
+        filePath = monkey;
+    }
+    case 4:
+    {
+        filePath = torus;
+    }
+    case 5:
+    {
+        filePath = tree;
+    }
+    case 6:
+    {
+        filePath = zelda;
+    }
+    }
+
     size_t lastSlash = filePath.find_last_of('/');
     size_t lastDot = filePath.find_last_of('.');
 
