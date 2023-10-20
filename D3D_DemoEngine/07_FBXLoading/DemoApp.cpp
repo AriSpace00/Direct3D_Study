@@ -205,13 +205,29 @@ void DemoApp::Render()
         {
             ImGui::Begin("Light Properties");
 
+            ImGui::Text("Use Diffuse Map");
+            ImGui::SameLine();
+            ImGui::Checkbox("##bDiffuseMap", &m_Material.UseDiffuseMap);
+            if(!m_Material.UseDiffuseMap)
+            {
+                auto test = 0;
+            }
+
             ImGui::Text("Use Normal Map");
             ImGui::SameLine();
-            ImGui::Checkbox("##bNormalMap", (bool*)&m_Material.UseNormalMap);
+            ImGui::Checkbox("##bNormalMap", &m_Material.UseNormalMap);
 
             ImGui::Text("Use Specular Map");
             ImGui::SameLine();
-            ImGui::Checkbox("##bSpecularMap", (bool*)&m_Material.UseSpecularMap);
+            ImGui::Checkbox("##bSpecularMap", &m_Material.UseSpecularMap);
+
+            ImGui::Text("Use Emissive Map");
+            ImGui::SameLine();
+            ImGui::Checkbox("##bEmissiveMap", &m_Material.UseEmissiveMap);
+
+            ImGui::Text("Use Opacity Map");
+            ImGui::SameLine();
+            ImGui::Checkbox("##bOpacityMap", &m_Material.UseOpacityMap);
 
             ImGui::Text("[Directional Light]");
             ImGui::Text("Light Direction");
@@ -438,7 +454,7 @@ bool DemoApp::InitScene()
     m_WorldMatrix = XMMatrixIdentity();
 
     // 뷰 매트릭스 초기화
-    m_Eye = XMVectorSet(0.0f, 0.0f, -200.0f, 0.0f);
+    m_Eye = XMVectorSet(0.0f, 100.0f, -200.0f, 0.0f);
     m_At = XMVectorSet(0.0f, 0.0f, 0.1f, 0.0f);
     m_Up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
 
@@ -452,16 +468,30 @@ bool DemoApp::InitScene()
     unsigned int importFlags = aiProcess_Triangulate | aiProcess_GenNormals | aiProcess_GenUVCoords | aiProcess_CalcTangentSpace |
         aiProcess_ConvertToLeftHanded;
 
-    const aiScene* scene = importer.ReadFile("../Resource/ZeldaPosed001.fbx", importFlags);
+    // FBX 파일 경로 지정, 파일 이름 분리
+    std::string filePath = "../Resource/FBXLoad_Test/fbx/box.fbx";
+    size_t lastSlash = filePath.find_last_of('/');
+    size_t lastDot = filePath.find_last_of('.');
+
+    if(lastSlash != std::string::npos && lastDot != std::string::npos)
+    {
+        std::wstring finalFilePath(filePath.begin(), filePath.end());
+        m_FBXFileName = finalFilePath.substr(lastSlash + 1, lastDot - lastSlash - 1);
+    }
+
+    // FBX 파일 경로를 scene에 바인딩
+    const aiScene* scene = importer.ReadFile(filePath, importFlags);
 
     if (!scene) {
         LOG_ERRORA("Error loading FBX file: %s", importer.GetErrorString());
         return false;
     }
 
+    // FBX 파일에 해당하는 Material, Mesh 정보 Create
     m_Materials.resize(scene->mNumMaterials);
     for (unsigned int i = 0; i < scene->mNumMaterials; ++i)
     {
+        m_Materials[i].SetFileName(m_FBXFileName);
         m_Materials[i].Create(m_Device, scene->mMaterials[i]);
     }
 
@@ -488,7 +518,6 @@ void DemoApp::UnInitScene()
     SAFE_RELEASE(m_VertexShader);
     SAFE_RELEASE(m_PixelShader);
     SAFE_RELEASE(m_InputLayout);
-    SAFE_RELEASE(m_DepthStencilView);
 }
 
 bool DemoApp::InitImGUI()

@@ -1,5 +1,6 @@
 #pragma once
 #include <d3d11.h>
+#include <string>
 #include <directxtk/SimpleMath.h>
 #include "../Common/GameApp.h"
 #include "../Common/Mesh.h"
@@ -46,7 +47,6 @@ struct CB_Material
     bool UseOpacityMap = true;
     bool MT_pad4[3];
     Vector2 MT_pad5;
-    
 };
 
 class DemoApp :
@@ -90,7 +90,6 @@ public:
     vector<Material> m_Materials;
 
     const float m_ClearColor[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
-    Vector3 m_CameraPos = { 0.0f, 0.0f, -1000.0f };
 
     float m_CubeRotationX = 0.0f;
     float m_CubeRotationY = 0.0f;
@@ -102,6 +101,8 @@ public:
     XMVECTOR m_Eye;
     XMVECTOR m_At;
     XMVECTOR m_Up;
+
+    std::wstring m_FBXFileName;
 
 public:
     virtual bool Initialize(UINT width, UINT height);

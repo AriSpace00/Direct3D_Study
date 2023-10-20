@@ -11,7 +11,7 @@ using namespace DirectX;
 
 Material::Material()
 {
-} 
+}
 
 Material::~Material()
 {
@@ -33,10 +33,25 @@ void Material::Create(ID3D11Device* device, aiMaterial* material)
 
     for (const auto& entry : std::filesystem::recursive_directory_iterator(basePath))
     {
-        if (entry.is_regular_file() && entry.path().extension() == L".png")
+        if (entry.is_regular_file() && (entry.path().extension() == L".png" || entry.path().extension() == L".jpg"))
         {
+            // fbx 이름이랑 폴더 이름이랑 같으면 folderPath 생성
             folderPath = entry.path().parent_path().wstring();
-            name = material->GetName().C_Str();
+
+            std::wstring extractedString;
+            size_t lastSlash = folderPath.find_last_of('\\');
+            size_t lastDot = folderPath.find_last_of('.');
+
+            if (lastSlash != std::string::npos && lastDot != std::string::npos)
+            {
+                extractedString = folderPath.substr(lastSlash + 1, lastDot - lastSlash - 1);
+            }
+
+            if (FBXFileName == extractedString)
+            {
+                name = material->GetName().C_Str();
+                break;
+            }
         }
     }
 
@@ -76,3 +91,9 @@ void Material::Create(ID3D11Device* device, aiMaterial* material)
         HR_T(DirectX::CreateWICTextureFromFile(device, finalPath.c_str(), nullptr, &m_OpacityRV));
     }
 }
+
+void Material::SetFileName(std::wstring fileName)
+{
+    FBXFileName = fileName;
+}
+

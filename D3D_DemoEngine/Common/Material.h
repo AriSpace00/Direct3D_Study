@@ -1,6 +1,7 @@
 #pragma once
 
 #include <d3d11.h>
+#include <string>
 
 struct aiMaterial;
 
@@ -9,6 +10,9 @@ class Material
 public:
     Material();
     ~Material();
+
+private:
+    std::wstring FBXFileName;
 
 public:
     ID3D11ShaderResourceView* m_DiffuseRV = nullptr;        // 텍스처 리소스 뷰
@@ -19,5 +23,6 @@ public:
 
 public:
     void Create(ID3D11Device* device, aiMaterial* material);
+    void SetFileName(std::wstring fileName);
 };
 

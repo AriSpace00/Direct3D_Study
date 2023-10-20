@@ -105,7 +105,7 @@ inline void HR_T(HRESULT hr)
 //--------------------------------------------------------------------------------------
 HRESULT CompileShaderFromFile(const WCHAR* szFileName, LPCSTR szEntryPoint, LPCSTR szShaderModel, ID3DBlob** ppBlobOut);
 
-std::wstring ToWString(const std::string& s)
+inline std::wstring ToWString(const std::string& s)
 {
 	std::wstring wsTmp(s.begin(), s.end());
 	return wsTmp;
