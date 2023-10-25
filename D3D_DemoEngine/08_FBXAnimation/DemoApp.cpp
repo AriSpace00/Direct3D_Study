@@ -440,7 +440,7 @@ bool DemoApp::InitScene()
 
     // 버텍스 셰이더가 문제없이 생성된 후 Input Layout 생성
     ID3DBlob* vertexShaderBuffer = nullptr;
-    HR_T(CompileShaderFromFile(L"FBXLoadVS.hlsl", "main", "vs_4_0", &vertexShaderBuffer));
+    HR_T(CompileShaderFromFile(L"FBXAnimVS.hlsl", "main", "vs_4_0", &vertexShaderBuffer));
     if (FAILED(hr))
     {
         MessageBoxA(m_hWnd, (char*)errorMessage->GetBufferPointer(), "Vertex Shader 오류", MB_OK);
@@ -466,7 +466,7 @@ bool DemoApp::InitScene()
 
     // 5. Render() 에서 파이프라인에 바인딩할 픽셀 셰이더 생성
     ID3DBlob* pixelShaderBuffer = nullptr;
-    HR_T(CompileShaderFromFile(L"FBXLoadPS.hlsl", "main", "ps_4_0", &pixelShaderBuffer));
+    HR_T(CompileShaderFromFile(L"FBXAnimPS.hlsl", "main", "ps_4_0", &pixelShaderBuffer));
     if (FAILED(hr))
     {
         MessageBoxA(m_hWnd, (char*)errorMessage->GetBufferPointer(), "Pixel Shader 생성 오류", MB_OK);
@@ -544,34 +544,42 @@ bool DemoApp::InitScene()
     case 0:
     {
         filePath = box;
+        break;
     }
     case 1:
     {
         filePath = charcter;
+        break;
     }
     case 2:
     {
         filePath = icosphere;
+        break;
     }
     case 3:
     {
         filePath = monkey;
+        break;
     }
     case 4:
     {
         filePath = torus;
+        break;
     }
     case 5:
     {
         filePath = tree;
+        break;
     }
     case 6:
     {
         filePath = zelda;
+        break;
     }
     case 7:
     {
         filePath = boneDummy;
+        break;
     }
     }
 

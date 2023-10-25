@@ -1,6 +1,7 @@
 #pragma once
 #include <d3d11.h>
 #include <string>
+#include <vector>
 #include <directxtk/SimpleMath.h>
 #include "../Common/GameApp.h"
 #include "../Common/Mesh.h"
@@ -104,7 +105,7 @@ public:
 
     std::wstring m_FBXFileName;
 
-    int m_FBXModelIndex = 7;
+    int m_FBXModelIndex = 0;
 
 public:
     virtual bool Initialize(UINT width, UINT height);
