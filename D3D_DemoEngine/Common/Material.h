@@ -23,6 +23,6 @@ public:
 
 public:
     void Create(ID3D11Device* device, aiMaterial* material);
-    void SetFileName(std::wstring fileName);
+    void SetFileName(const std::wstring& fileName);
 };
 

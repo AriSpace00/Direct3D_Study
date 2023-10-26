@@ -92,7 +92,7 @@ void Material::Create(ID3D11Device* device, aiMaterial* material)
     }
 }
 
-void Material::SetFileName(std::wstring fileName)
+void Material::SetFileName(const std::wstring& fileName)
 {
     FBXFileName = fileName;
 }

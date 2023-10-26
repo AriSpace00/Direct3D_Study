@@ -544,34 +544,42 @@ bool DemoApp::InitScene()
     case 0:
     {
         filePath = box;
+        break;
     }
     case 1:
     {
         filePath = charcter;
+        break;
     }
     case 2:
     {
         filePath = icosphere;
+        break;
     }
     case 3:
     {
         filePath = monkey;
+        break;
     }
     case 4:
     {
         filePath = torus;
+        break;
     }
     case 5:
     {
         filePath = tree;
+        break;
     }
     case 6:
     {
         filePath = zelda;
+        break;
     }
     case 7:
     {
         filePath = boneDummy;
+        break;
     }
     }
 
