@@ -6,6 +6,7 @@
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 
+#include"Node.h"
 #include "Helper.h"
 
 Model::Model()
@@ -16,8 +17,8 @@ Model::~Model()
 {
     m_Importer.FreeScene();
 
-    SAFE_RELEASE(m_Scene);
-    SAFE_RELEASE(m_RootNode);
+    /*SAFE_RELEASE(m_Node);
+    SAFE_RELEASE(m_Scene);*/
 }
 
 void Model::ReadFile(ID3D11Device* device, const std::string& path)
@@ -62,15 +63,11 @@ void Model::ReadFile(ID3D11Device* device, const std::string& path)
         m_Meshes[i].Create(device, m_Scene->mMeshes[i]);
     }
 
-    // Node에 전달할 정보
-    /*for(unsigned int i=0; i< m_Scene->mNumAnimations; ++i)
-    {
-        m_Nodes[i].Create(device, m_Scene->mAnimations[i]);
-    }*/
+    // FBX 파일에 해당하는 Node 정보 Create
+    m_Node = new Node();
+    m_Node->Create(m_Scene->mRootNode);
+    m_Node->SetScene(m_Scene);
 
-    // Root Node 정보 저장
-    m_RootNode = m_Scene->mRootNode;
-    
     IsFileLoad = true;
 }
 
@@ -80,4 +77,9 @@ void Model::UpdateAnimation()
 
 void Model::Update(const float& deltaTime)
 {
+}
+
+void Model::Render()
+{
+    // Mesh와 Material Render
 }

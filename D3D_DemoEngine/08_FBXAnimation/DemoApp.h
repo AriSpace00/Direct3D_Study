@@ -4,6 +4,7 @@
 #include <vector>
 #include <directxtk/SimpleMath.h>
 #include "../Common/GameApp.h"
+#include "../Common/Model.h"
 #include "../Common/Mesh.h"
 #include "../Common/Material.h"
 
@@ -90,7 +91,9 @@ public:
     vector<Mesh> m_Meshes;
     vector<Material> m_Materials;
 
-    const float m_ClearColor[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+    Model* m_Model;
+
+    const float m_ClearColor[4] = { 0.3f, 0.3f, 0.3f, 1.0f };
 
     float m_CubeRotationX = 0.0f;
     float m_CubeRotationY = 0.0f;

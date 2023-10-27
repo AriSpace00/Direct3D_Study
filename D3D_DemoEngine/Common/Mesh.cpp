@@ -12,8 +12,8 @@ Mesh::Mesh()
 
 Mesh::~Mesh()
 {
-    SAFE_RELEASE(m_VertexBuffer);
-    SAFE_RELEASE(m_IndexBuffer);
+    /*SAFE_RELEASE(m_VertexBuffer);
+    SAFE_RELEASE(m_IndexBuffer);*/
 }
 
 void Mesh::CreateVertexBuffer(ID3D11Device* device, Vertex* vertices, UINT vertexCount)
@@ -80,4 +80,9 @@ void Mesh::Create(ID3D11Device* device, aiMesh* mesh)
         indices[i * 3 + 2] = mesh->mFaces[i].mIndices[2];
     }
     CreateIndexBuffer(device, indices.get(), mesh->mNumFaces * 3);
+}
+
+void Mesh::Render()
+{
+    // Node Render
 }

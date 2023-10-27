@@ -1,5 +1,8 @@
 #pragma once
 
+// Material Class
+// 3d 모델로부터 불러온 머테리얼 정보로 텍스처 생성한다.
+
 #include <d3d11.h>
 #include <string>
 
@@ -24,5 +27,6 @@ public:
 public:
     void Create(ID3D11Device* device, aiMaterial* material);
     void SetFileName(const std::wstring& fileName);
+    void Render();
 };
 

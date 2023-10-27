@@ -1,5 +1,9 @@
 #pragma once
 
+// Mesh Class
+// 3d 모델로부터 불러온 버텍스 정보로 버텍스 버퍼를 생성한다.
+// 3d 모델로부터 불러온 버텍스 정보로 인덱스 버퍼를 생성한다.
+
 #include <d3d11.h>
 #include <wrl/client.h>
 #include <directxtk/SimpleMath.h>
@@ -17,10 +21,6 @@ struct Vertex
 };
 
 struct aiMesh;
-
-// Mesh Class
-// 3d 모델로부터 불러온 버텍스 정보로 버텍스 버퍼를 생성한다.
-// 3d 모델로부터 불러온 버텍스 정보로 인덱스 버퍼를 생성한다.
 
 class Mesh
 {
@@ -48,5 +48,6 @@ private:
 public:
     // aiMesh로부터 불러온 정보로 버텍스 버퍼 & 인덱스 버퍼 생성
     void Create(ID3D11Device* device, aiMesh* mesh);
+    void Render();
 };
 

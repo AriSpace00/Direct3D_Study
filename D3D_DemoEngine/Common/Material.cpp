@@ -97,3 +97,8 @@ void Material::SetFileName(const std::wstring& fileName)
     FBXFileName = fileName;
 }
 
+void Material::Render()
+{
+    // Material Render
+}
+

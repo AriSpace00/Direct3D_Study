@@ -11,6 +11,8 @@
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 
+#include "../Common/Node.h"
+
 
 #pragma comment(lib, "d3d11.lib")
 #pragma comment(lib, "d3dcompiler.lib")
@@ -101,43 +103,52 @@ void DemoApp::Render()
     m_Light.Direction.Normalize();
     m_DeviceContext->UpdateSubresource(m_CBDirectionalLight, 0, nullptr, &m_Light, 0, 0);
 
-    for (size_t i = 0; i < m_Meshes.size(); i++)
+    auto nodeTest = m_Model->m_Node->m_Nodes;
+    for(int i=0; i< nodeTest.size(); i++)
     {
-        size_t mi = m_Meshes[i].m_MaterialIndex;
+        auto t = nodeTest[i]->m_Node->mMeshes;
+    }
 
-        m_DeviceContext->PSSetShaderResources(0, 1, &m_Materials[mi].m_DiffuseRV);
-        m_DeviceContext->PSSetShaderResources(1, 1, &m_Materials[mi].m_NormalRV);
-        m_DeviceContext->PSSetShaderResources(2, 1, &m_Materials[mi].m_SpecularRV);
-        m_DeviceContext->PSSetShaderResources(3, 1, &m_Materials[mi].m_EmissiveRV);
-        m_DeviceContext->PSSetShaderResources(4, 1, &m_Materials[mi].m_OpacityRV);
+    auto meshTest = m_Model->m_Meshes;
+    auto materialTest = m_Model->m_Materials;
+
+    for (size_t i = 0; i < meshTest.size(); i++)
+    {
+        size_t mi = meshTest[i].m_MaterialIndex;
+
+        m_DeviceContext->PSSetShaderResources(0, 1, &materialTest[mi].m_DiffuseRV);
+        m_DeviceContext->PSSetShaderResources(1, 1, &materialTest[mi].m_NormalRV);
+        m_DeviceContext->PSSetShaderResources(2, 1, &materialTest[mi].m_SpecularRV);
+        m_DeviceContext->PSSetShaderResources(3, 1, &materialTest[mi].m_EmissiveRV);
+        m_DeviceContext->PSSetShaderResources(4, 1, &materialTest[mi].m_OpacityRV);
 
 
-        if (m_Materials[mi].m_DiffuseRV != nullptr)
+        if (materialTest[mi].m_DiffuseRV != nullptr)
         {
             IsDiffuseExist = true;
         }
-        if (m_Materials[mi].m_NormalRV != nullptr)
+        if (materialTest[mi].m_NormalRV != nullptr)
         {
             IsNormalExist = true;
         }
-        if (m_Materials[mi].m_SpecularRV != nullptr)
+        if (materialTest[mi].m_SpecularRV != nullptr)
         {
             IsSpecularExist = true;
         }
-        if (m_Materials[mi].m_EmissiveRV != nullptr)
+        if (materialTest[mi].m_EmissiveRV != nullptr)
         {
             IsEmissiveExist = true;
         }
-        if (m_Materials[mi].m_OpacityRV != nullptr)
+        if (materialTest[mi].m_OpacityRV != nullptr)
         {
             IsOpacityExist = true;
         }
 
-        m_Material.UseDiffuseMap = m_Materials[mi].m_DiffuseRV != nullptr ? true : false;
-        m_Material.UseNormalMap = m_Materials[mi].m_NormalRV != nullptr ? true : false;
-        m_Material.UseSpecularMap = m_Materials[mi].m_SpecularRV != nullptr ? true : false;
-        m_Material.UseEmissiveMap = m_Materials[mi].m_EmissiveRV != nullptr ? true : false;
-        m_Material.UseOpacityMap = m_Materials[mi].m_OpacityRV != nullptr ? true : false;
+        m_Material.UseDiffuseMap = materialTest[mi].m_DiffuseRV != nullptr ? true : false;
+        m_Material.UseNormalMap = materialTest[mi].m_NormalRV != nullptr ? true : false;
+        m_Material.UseSpecularMap = materialTest[mi].m_SpecularRV != nullptr ? true : false;
+        m_Material.UseEmissiveMap = materialTest[mi].m_EmissiveRV != nullptr ? true : false;
+        m_Material.UseOpacityMap = materialTest[mi].m_OpacityRV != nullptr ? true : false;
 
         if (m_Material.UseOpacityMap)
         {
@@ -149,9 +160,9 @@ void DemoApp::Render()
         }
 
         m_DeviceContext->UpdateSubresource(m_CBMaterial, 0, nullptr, &m_Material, 0, 0);
-        m_DeviceContext->IASetIndexBuffer(m_Meshes[i].m_IndexBuffer, DXGI_FORMAT_R16_UINT, 0);
-        m_DeviceContext->IASetVertexBuffers(0, 1, &m_Meshes[i].m_VertexBuffer, &m_Meshes[i].m_VertexBufferStride, &m_Meshes[i].m_VertexBufferOffset);
-        m_DeviceContext->DrawIndexed(m_Meshes[i].m_IndexCount, 0, 0);
+        m_DeviceContext->IASetIndexBuffer(meshTest[i].m_IndexBuffer, DXGI_FORMAT_R16_UINT, 0);
+        m_DeviceContext->IASetVertexBuffers(0, 1, &meshTest[i].m_VertexBuffer, &meshTest[i].m_VertexBufferStride, &meshTest[i].m_VertexBufferOffset);
+        m_DeviceContext->DrawIndexed(meshTest[i].m_IndexCount, 0, 0);
     }
 
     // ImGui
@@ -523,97 +534,102 @@ bool DemoApp::InitScene()
     m_ProjectionMatrix = XMMatrixPerspectiveFovLH(XM_PIDIV4, m_ClientWidth / (FLOAT)m_ClientHeight, 0.01f, 20000.0f);
 
     // 8. FBX Loading
-    Assimp::Importer importer;
-    unsigned int importFlags = aiProcess_Triangulate | aiProcess_GenNormals | aiProcess_GenUVCoords | aiProcess_CalcTangentSpace |
-        aiProcess_ConvertToLeftHanded;
+    //Assimp::Importer importer;
+    //unsigned int importFlags = aiProcess_Triangulate | aiProcess_GenNormals | aiProcess_GenUVCoords | aiProcess_CalcTangentSpace |
+    //    aiProcess_ConvertToLeftHanded;
 
-    // FBX 파일 경로 지정, 파일 이름 분리
-    std::string box = "../Resource/FBXLoad_Test/fbx/box.fbx";
-    std::string charcter = "../Resource/FBXLoad_Test/fbx/Character.fbx";
-    std::string icosphere = "../Resource/FBXLoad_Test/fbx/IcoSphere.fbx";
-    std::string monkey = "../Resource/FBXLoad_Test/fbx/Monkey.fbx";
-    std::string torus = "../Resource/FBXLoad_Test/fbx/Torus.fbx";
-    std::string tree = "../Resource/FBXLoad_Test/fbx/Tree.fbx";
-    std::string zelda = "../Resource/FBXLoad_Test/fbx/zeldaPosed001.fbx";
+    //// FBX 파일 경로 지정, 파일 이름 분리
+    //std::string box = "../Resource/FBXLoad_Test/fbx/box.fbx";
+    //std::string charcter = "../Resource/FBXLoad_Test/fbx/Character.fbx";
+    //std::string icosphere = "../Resource/FBXLoad_Test/fbx/IcoSphere.fbx";
+    //std::string monkey = "../Resource/FBXLoad_Test/fbx/Monkey.fbx";
+    //std::string torus = "../Resource/FBXLoad_Test/fbx/Torus.fbx";
+    //std::string tree = "../Resource/FBXLoad_Test/fbx/Tree.fbx";
+    //std::string zelda = "../Resource/FBXLoad_Test/fbx/zeldaPosed001.fbx";
+    //std::string boneDummy = "../Resource/FBXLoad_Test/fbx/BoneDummy.fbx";
+
+    //std::string filePath;
+
+    //switch (m_FBXModelIndex)
+    //{
+    //case 0:
+    //{
+    //    filePath = box;
+    //    break;
+    //}
+    //case 1:
+    //{
+    //    filePath = charcter;
+    //    break;
+    //}
+    //case 2:
+    //{
+    //    filePath = icosphere;
+    //    break;
+    //}
+    //case 3:
+    //{
+    //    filePath = monkey;
+    //    break;
+    //}
+    //case 4:
+    //{
+    //    filePath = torus;
+    //    break;
+    //}
+    //case 5:
+    //{
+    //    filePath = tree;
+    //    break;
+    //}
+    //case 6:
+    //{
+    //    filePath = zelda;
+    //    break;
+    //}
+    //case 7:
+    //{
+    //    filePath = boneDummy;
+    //    break;
+    //}
+    //}
+
+    //size_t lastSlash = filePath.find_last_of('/');
+    //size_t lastDot = filePath.find_last_of('.');
+
+    //if (lastSlash != std::string::npos && lastDot != std::string::npos)
+    //{
+    //    std::wstring finalFilePath(filePath.begin(), filePath.end());
+    //    m_FBXFileName = finalFilePath.substr(lastSlash + 1, lastDot - lastSlash - 1);
+    //}
+
+    //// FBX 파일 경로를 scene에 바인딩
+    //const aiScene* scene = importer.ReadFile(filePath, importFlags);
+
+    //if (!scene) {
+    //    LOG_ERRORA("Error loading FBX file: %s", importer.GetErrorString());
+    //    return false;
+    //}
+
+    //// FBX 파일에 해당하는 Material, Mesh 정보 Create
+    //m_Materials.resize(scene->mNumMaterials);
+    //for (unsigned int i = 0; i < scene->mNumMaterials; ++i)
+    //{
+    //    m_Materials[i].SetFileName(m_FBXFileName);
+    //    m_Materials[i].Create(m_Device, scene->mMaterials[i]);
+    //}
+
+    //m_Meshes.resize(scene->mNumMeshes);
+    //for (unsigned int i = 0; i < scene->mNumMeshes; ++i)
+    //{
+    //    m_Meshes[i].Create(m_Device, scene->mMeshes[i]);
+    //}
+    //importer.FreeScene();
+
+    // Model 클래스로 FBX Load
     std::string boneDummy = "../Resource/FBXLoad_Test/fbx/BoneDummy.fbx";
-
-    std::string filePath;
-
-    switch (m_FBXModelIndex)
-    {
-    case 0:
-    {
-        filePath = box;
-        break;
-    }
-    case 1:
-    {
-        filePath = charcter;
-        break;
-    }
-    case 2:
-    {
-        filePath = icosphere;
-        break;
-    }
-    case 3:
-    {
-        filePath = monkey;
-        break;
-    }
-    case 4:
-    {
-        filePath = torus;
-        break;
-    }
-    case 5:
-    {
-        filePath = tree;
-        break;
-    }
-    case 6:
-    {
-        filePath = zelda;
-        break;
-    }
-    case 7:
-    {
-        filePath = boneDummy;
-        break;
-    }
-    }
-
-    size_t lastSlash = filePath.find_last_of('/');
-    size_t lastDot = filePath.find_last_of('.');
-
-    if (lastSlash != std::string::npos && lastDot != std::string::npos)
-    {
-        std::wstring finalFilePath(filePath.begin(), filePath.end());
-        m_FBXFileName = finalFilePath.substr(lastSlash + 1, lastDot - lastSlash - 1);
-    }
-
-    // FBX 파일 경로를 scene에 바인딩
-    const aiScene* scene = importer.ReadFile(filePath, importFlags);
-
-    if (!scene) {
-        LOG_ERRORA("Error loading FBX file: %s", importer.GetErrorString());
-        return false;
-    }
-
-    // FBX 파일에 해당하는 Material, Mesh 정보 Create
-    m_Materials.resize(scene->mNumMaterials);
-    for (unsigned int i = 0; i < scene->mNumMaterials; ++i)
-    {
-        m_Materials[i].SetFileName(m_FBXFileName);
-        m_Materials[i].Create(m_Device, scene->mMaterials[i]);
-    }
-
-    m_Meshes.resize(scene->mNumMeshes);
-    for (unsigned int i = 0; i < scene->mNumMeshes; ++i)
-    {
-        m_Meshes[i].Create(m_Device, scene->mMeshes[i]);
-    }
-    importer.FreeScene();
+    m_Model = new Model();
+    m_Model->ReadFile(m_Device, boneDummy);
 
     return true;
 }
