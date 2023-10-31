@@ -149,7 +149,7 @@ void DemoApp::Render()
         m_Material.UseSpecularMap = materialTest[mi].m_SpecularRV != nullptr ? true : false;
         m_Material.UseEmissiveMap = materialTest[mi].m_EmissiveRV != nullptr ? true : false;
         m_Material.UseOpacityMap = materialTest[mi].m_OpacityRV != nullptr ? true : false;
-
+       
         if (m_Material.UseOpacityMap)
         {
             m_DeviceContext->OMSetBlendState(m_AlphaBlendState, nullptr, 0xffffffff);

@@ -49,6 +49,11 @@ void Model::ReadFile(ID3D11Device* device, const std::string& path)
         return;
     }
 
+    // FBX 파일에 해당하는 Node 정보 Create
+    m_Node = new Node();
+    m_Node->Create(m_Scene->mRootNode);
+    m_Node->SetScene(m_Scene);
+
     // FBX 파일에 해당하는 Material, Mesh 정보 Create
     m_Materials.resize(m_Scene->mNumMaterials);
     for (unsigned int i = 0; i < m_Scene->mNumMaterials; ++i)
@@ -62,12 +67,6 @@ void Model::ReadFile(ID3D11Device* device, const std::string& path)
     {
         m_Meshes[i].Create(device, m_Scene->mMeshes[i]);
     }
-
-    // FBX 파일에 해당하는 Node 정보 Create
-    m_Node = new Node();
-    m_Node->Create(m_Scene->mRootNode);
-    m_Node->SetScene(m_Scene);
-
     IsFileLoad = true;
 }
 
@@ -82,4 +81,15 @@ void Model::Update(const float& deltaTime)
 void Model::Render()
 {
     // Mesh와 Material Render
+    /*for (unsigned int i = 0; i < m_Scene->mNumMeshes; ++i)
+    {
+        m_Meshes[i].Render();
+    }
+
+    for (unsigned int i = 0; i < m_Scene->mNumMaterials; ++i)
+    {
+        m_Materials[i].Render();
+    }*/
+
+    /*m_Node->Render(TODO);*/
 }

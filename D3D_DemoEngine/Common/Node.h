@@ -31,7 +31,7 @@ struct NodeInfo
     //const aiNodeAnim* m_NodeAnimPtr;
 
     NodeInfo(const aiNode* node, int depth)
-    {
+    {      
         // 노드 정보 설정
         m_Node = node;
         m_Depth = depth;
@@ -73,6 +73,6 @@ public:
     const aiNodeAnim* FindNodeAnimation(const string& nodeName);
     void Create(const aiNode* node, int depth = 0);
     void Update(const float& deltaTime);
-    void Render();
+    void Render(ID3D11DeviceContext* device);
 };
 

@@ -13,9 +13,20 @@ void Node::Update(const float& deltaTime)
 {
 }
 
-void Node::Render()
+void Node::Render(ID3D11DeviceContext* deviceContext)
 {
     // Node Render
+    //deviceContext->DrawIndexed();
+
+    for(int i=0; i<m_Nodes.size(); i++)
+    {
+        for (int j = 0; j < m_Nodes[i]->m_Node->mNumMeshes; j++)
+        {
+
+        }
+    }
+    
+
 }
 
 void Node::SetScene(const aiScene* scene)
