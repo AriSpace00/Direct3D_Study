@@ -18,15 +18,27 @@ void Node::Render(ID3D11DeviceContext* deviceContext)
     // Node Render
     //deviceContext->DrawIndexed();
 
-    for(int i=0; i<m_Nodes.size(); i++)
+    for (int i = 0; i < m_Nodes.size(); i++)
     {
         for (int j = 0; j < m_Nodes[i]->m_Node->mNumMeshes; j++)
         {
 
         }
     }
-    
 
+
+}
+
+void Node::UpdateWorldTransform(aiNode* node)
+{
+    // 부모 끝까지 타고 올라가서 Transform 업데이트 해줘야함
+    for (int i = 0; i < m_Nodes.size(); i++)
+    {
+        if(m_Nodes[i]->m_NodeName == node->mName)
+        {
+            
+        }
+    }
 }
 
 void Node::SetScene(const aiScene* scene)

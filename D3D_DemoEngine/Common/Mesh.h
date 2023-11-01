@@ -8,6 +8,8 @@
 #include <wrl/client.h>
 #include <directxtk/SimpleMath.h>
 
+#include "Node.h"
+
 using namespace Microsoft::WRL;
 using namespace DirectX::SimpleMath;
 using namespace std;
@@ -36,7 +38,7 @@ public:
     UINT m_VertexBufferOffset = 0;    // 버텍스 버퍼의 오프셋
     UINT m_VertexCount = 0;           // 버텍스 개수 
     UINT m_IndexCount = 0;            // 인덱스 개수
-    UINT m_MaterialIndex = 0;         // 머테리얼 인덱스  
+    UINT m_MaterialIndex = 0;         // 머테리얼 인덱스
 
 private:
     // aiMesh로부터 불러온 정보로 Create 함수를 진행하기 위한 내부함수
@@ -47,7 +49,7 @@ private:
 
 public:
     // aiMesh로부터 불러온 정보로 버텍스 버퍼 & 인덱스 버퍼 생성
-    void Create(ID3D11Device* device, aiMesh* mesh);
+    void Create(ID3D11Device* device, aiMesh* mesh, const aiMatrix4x4& nodeWorldTransform);
     void Render();
 };
 

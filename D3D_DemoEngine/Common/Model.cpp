@@ -23,7 +23,7 @@ Model::~Model()
 
 void Model::ReadFile(ID3D11Device* device, const std::string& path)
 {
-    if(IsFileLoad)
+    if (IsFileLoad)
     {
         return;
     }
@@ -54,7 +54,7 @@ void Model::ReadFile(ID3D11Device* device, const std::string& path)
     m_Node->Create(m_Scene->mRootNode);
     m_Node->SetScene(m_Scene);
 
-    // FBX 파일에 해당하는 Material, Mesh 정보 Create
+    // FBX 파일에 해당하는 Material 정보 Create
     m_Materials.resize(m_Scene->mNumMaterials);
     for (unsigned int i = 0; i < m_Scene->mNumMaterials; ++i)
     {
@@ -62,11 +62,27 @@ void Model::ReadFile(ID3D11Device* device, const std::string& path)
         m_Materials[i].Create(device, m_Scene->mMaterials[i]);
     }
 
-    m_Meshes.resize(m_Scene->mNumMeshes);
-    for (unsigned int i = 0; i < m_Scene->mNumMeshes; ++i)
+    // FBX 파일에 해당하는 Mesh 정보 Create
+    //m_Meshes.resize(m_Scene->mNumMeshes);
+    for (unsigned int i = 0; i < m_Node->m_Nodes.size(); i++)
     {
-        m_Meshes[i].Create(device, m_Scene->mMeshes[i]);
+        const aiNode* currentNode = m_Node->m_Nodes[i]->m_Node;
+        const aiMatrix4x4& worldTransform = m_Node->m_Nodes[i]->m_NodeWorldTM;
+
+        if (currentNode->mNumMeshes > 0)
+        {
+            for (unsigned int j = 0; j < currentNode->mNumMeshes; j++)
+            {
+                aiMesh* mesh = m_Scene->mMeshes[currentNode->mMeshes[j]];
+
+                // Mesh의 Create 함수를 호출하여 Mesh를 업데이트합니다.
+                Mesh currentMesh;
+                currentMesh.Create(device, mesh, worldTransform);
+                m_Meshes.push_back(currentMesh);
+            }
+        }
     }
+
     IsFileLoad = true;
 }
 

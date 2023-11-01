@@ -52,7 +52,7 @@ void Mesh::CreateIndexBuffer(ID3D11Device* device, WORD* indices, UINT indexCoun
     m_IndexCount = indexCount;
 }
 
-void Mesh::Create(ID3D11Device* device, aiMesh* mesh)
+void Mesh::Create(ID3D11Device* device, aiMesh* mesh, const aiMatrix4x4& nodeWorldTransform)
 {
     m_MaterialIndex = mesh->mMaterialIndex;
 
@@ -61,7 +61,10 @@ void Mesh::Create(ID3D11Device* device, aiMesh* mesh)
     unique_ptr<Vertex[]> vertices(new Vertex[mesh->mNumVertices]);
     for (UINT i = 0; i < mesh->mNumVertices; i++)
     {
-        vertices[i].Position = Vector3(mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z);
+        aiVector3D transformedPosition = mesh->mVertices[i];
+        auto test = nodeWorldTransform * transformedPosition;
+
+        vertices[i].Position = Vector3(test.x, test.y, test.z);
         // 실제 쓰일 머테리얼은 Material 클래스에서 조정하므로 TexCoords 세트는 1개만 존재함
         vertices[i].Texcoord = Vector2(mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y);
         vertices[i].Normal = Vector3(mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z);

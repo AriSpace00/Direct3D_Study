@@ -103,12 +103,6 @@ void DemoApp::Render()
     m_Light.Direction.Normalize();
     m_DeviceContext->UpdateSubresource(m_CBDirectionalLight, 0, nullptr, &m_Light, 0, 0);
 
-    auto nodeTest = m_Model->m_Node->m_Nodes;
-    for(int i=0; i< nodeTest.size(); i++)
-    {
-        auto t = nodeTest[i]->m_Node->mMeshes;
-    }
-
     auto meshTest = m_Model->m_Meshes;
     auto materialTest = m_Model->m_Materials;
 
@@ -158,6 +152,10 @@ void DemoApp::Render()
         {
             m_DeviceContext->OMSetBlendState(nullptr, nullptr, 0xffffffff);
         }
+
+        auto t1 = meshTest[i].m_VertexBuffer;
+        auto t2 = meshTest[i].m_VertexBufferStride;
+        auto t3 = meshTest[i].m_VertexBufferOffset;
 
         m_DeviceContext->UpdateSubresource(m_CBMaterial, 0, nullptr, &m_Material, 0, 0);
         m_DeviceContext->IASetIndexBuffer(meshTest[i].m_IndexBuffer, DXGI_FORMAT_R16_UINT, 0);
