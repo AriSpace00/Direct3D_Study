@@ -522,7 +522,7 @@ bool DemoApp::InitScene()
     m_WorldMatrix = XMMatrixIdentity();
 
     // 뷰 매트릭스 초기화
-    m_Eye = XMVectorSet(0.0f, 100.0f, -200.0f, 0.0f);
+    m_Eye = XMVectorSet(0.0f, 300.0f, -500.0f, 0.0f);
     m_At = XMVectorSet(0.0f, 0.0f, 0.1f, 0.0f);
     m_Up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
 
@@ -625,7 +625,7 @@ bool DemoApp::InitScene()
     //importer.FreeScene();
 
     // Model 클래스로 FBX Load
-    std::string boneDummy = "../Resource/FBXLoad_Test/fbx/BoneDummy.fbx";
+    std::string boneDummy = "../Resource/FBXLoad_Test/fbx/BoneDummy_Modify_WalkAnim.fbx";
     m_Model = new Model();
     m_Model->ReadFile(m_Device, boneDummy);
 

@@ -23,6 +23,7 @@ struct NodeInfo
 {
     int m_Depth = 0;
     aiString m_NodeName;
+    aiString m_NodeParentName;
     const aiNode* m_Node;
 
     aiMatrix4x4 m_NodeLocalTM;
@@ -37,6 +38,11 @@ struct NodeInfo
         m_Depth = depth;
         m_NodeName = node->mName;
 
+        if(node->mParent != nullptr)
+        {
+            m_NodeParentName = node->mParent->mName;
+        }
+
         // 노드 로컬 좌표계 설정
         m_NodeLocalTM = node->mTransformation;
 
@@ -46,15 +52,6 @@ struct NodeInfo
 
             nodeAnimation->Create(m_NodeAnimPtr);
         }*/
-
-        // 부모 노드가 있다면 부모 노드의 월드 좌표계를 곱함
-        if (node->mParent != nullptr)
-        {
-            m_NodeWorldTM = node->mParent->mTransformation * m_NodeLocalTM;
-        }
-
-        // 부모 노드가 없다면 로컬 좌표계가 월드 좌표계가 됨
-        m_NodeWorldTM = m_NodeLocalTM;
     }
 };
 
@@ -74,6 +71,6 @@ public:
     void Create(const aiNode* node, int depth = 0);
     void Update(const float& deltaTime);
     void Render(ID3D11DeviceContext* device);
-    void UpdateWorldTransform(aiNode* node);
+    aiMatrix4x4 GetParentWorldTransform(aiNode* parentNode);
 };
 

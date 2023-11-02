@@ -29,14 +29,14 @@ void Node::Render(ID3D11DeviceContext* deviceContext)
 
 }
 
-void Node::UpdateWorldTransform(aiNode* node)
+aiMatrix4x4 Node::GetParentWorldTransform(aiNode* parentNode)
 {
     // 부모 끝까지 타고 올라가서 Transform 업데이트 해줘야함
     for (int i = 0; i < m_Nodes.size(); i++)
     {
-        if(m_Nodes[i]->m_NodeName == node->mName)
+        if(m_Nodes[i]->m_NodeName == parentNode->mName)
         {
-            
+            return m_Nodes[i]->m_NodeWorldTM;
         }
     }
 }
@@ -70,6 +70,17 @@ void Node::Create(const aiNode* node, int depth)
 {
     // 노드 이름 정보 저장 
     NodeInfo* nodeInfo = new NodeInfo(node, depth);
+
+    // 노드 월드 좌표계 설정
+    if(node->mParent != nullptr)
+    {
+        nodeInfo->m_NodeWorldTM = GetParentWorldTransform(node->mParent) * nodeInfo->m_NodeLocalTM;
+    }
+    else
+    {
+        nodeInfo->m_NodeWorldTM = nodeInfo->m_NodeLocalTM;
+    }
+
 
     // 해당하는 노드 애니메이션 탐색
     //nodeInfo->m_NodeAnimPtr = FindNodeAnimation(nodeInfo->m_NodeName);
