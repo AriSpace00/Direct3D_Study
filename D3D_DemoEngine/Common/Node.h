@@ -38,6 +38,7 @@ struct NodeInfo
         m_Depth = depth;
         m_NodeName = node->mName;
 
+        // 부모 노드가 있다면 이름 저장
         if(node->mParent != nullptr)
         {
             m_NodeParentName = node->mParent->mName;

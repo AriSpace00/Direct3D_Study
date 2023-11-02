@@ -16,25 +16,14 @@ void Node::Update(const float& deltaTime)
 void Node::Render(ID3D11DeviceContext* deviceContext)
 {
     // Node Render
-    //deviceContext->DrawIndexed();
-
-    for (int i = 0; i < m_Nodes.size(); i++)
-    {
-        for (int j = 0; j < m_Nodes[i]->m_Node->mNumMeshes; j++)
-        {
-
-        }
-    }
-
-
 }
 
 aiMatrix4x4 Node::GetParentWorldTransform(aiNode* parentNode)
 {
-    // 부모 끝까지 타고 올라가서 Transform 업데이트 해줘야함
+    // 부모의 WorldTransform은 NodeInfo에 저장되어 있으므로 WorldTransform 업데이트
     for (int i = 0; i < m_Nodes.size(); i++)
     {
-        if(m_Nodes[i]->m_NodeName == parentNode->mName)
+        if (m_Nodes[i]->m_NodeName == parentNode->mName)
         {
             return m_Nodes[i]->m_NodeWorldTM;
         }
@@ -72,7 +61,7 @@ void Node::Create(const aiNode* node, int depth)
     NodeInfo* nodeInfo = new NodeInfo(node, depth);
 
     // 노드 월드 좌표계 설정
-    if(node->mParent != nullptr)
+    if (node->mParent != nullptr)
     {
         nodeInfo->m_NodeWorldTM = GetParentWorldTransform(node->mParent) * nodeInfo->m_NodeLocalTM;
     }
@@ -80,7 +69,6 @@ void Node::Create(const aiNode* node, int depth)
     {
         nodeInfo->m_NodeWorldTM = nodeInfo->m_NodeLocalTM;
     }
-
 
     // 해당하는 노드 애니메이션 탐색
     //nodeInfo->m_NodeAnimPtr = FindNodeAnimation(nodeInfo->m_NodeName);

@@ -16,9 +16,6 @@ Model::Model()
 Model::~Model()
 {
     m_Importer.FreeScene();
-
-    /*SAFE_RELEASE(m_Node);
-    SAFE_RELEASE(m_Scene);*/
 }
 
 void Model::ReadFile(ID3D11Device* device, const std::string& path)
@@ -49,38 +46,51 @@ void Model::ReadFile(ID3D11Device* device, const std::string& path)
         return;
     }
 
-    // FBX 파일에 해당하는 Node 정보 Create
-    m_Node = new Node();
-    m_Node->Create(m_Scene->mRootNode);
-    m_Node->SetScene(m_Scene);
+    // Node가 존재한다면, FBX 파일에 해당하는 Node 정보 Create
+    if (m_Scene->mRootNode != nullptr)
+    {
+        m_Node = new Node();
+        m_Node->Create(m_Scene->mRootNode);
+        m_Node->SetScene(m_Scene);
 
-    // FBX 파일에 해당하는 Material 정보 Create
+        // FBX 파일에 해당하는 Mesh 정보 Create
+        //m_Meshes.resize(m_Scene->mNumMeshes);
+        for (unsigned int i = 0; i < m_Node->m_Nodes.size(); i++)
+        {
+            const aiNode* currentNode = m_Node->m_Nodes[i]->m_Node;
+            const aiMatrix4x4& worldTransform = m_Node->m_Nodes[i]->m_NodeWorldTM;
+
+            if (currentNode->mNumMeshes > 0)
+            {
+                for (unsigned int j = 0; j < currentNode->mNumMeshes; j++)
+                {
+                    aiMesh* mesh = m_Scene->mMeshes[currentNode->mMeshes[j]];
+
+                    // Mesh의 Create 함수를 호출하여 Mesh를 업데이트합니다.
+                    Mesh currentMesh;
+                    currentMesh.Create(device, mesh, worldTransform);
+                    m_Meshes.push_back(currentMesh);
+                }
+            }
+        }
+    }
+    else
+    {
+        // Node가 존재하지 않는다면, FBX 파일에 해당하는 Mesh 정보 Create
+        m_Meshes.resize(m_Scene->mNumMeshes);
+        const aiMatrix4x4& worldTransform = aiMatrix4x4();
+        for (unsigned int i = 0; i < m_Scene->mNumMeshes; ++i)
+        {
+            m_Meshes[i].Create(device, m_Scene->mMeshes[i], worldTransform);
+        }
+    }
+
+    // Node 존재 여부와 관련없이 FBX 파일에 해당하는 Material 정보 Create
     m_Materials.resize(m_Scene->mNumMaterials);
     for (unsigned int i = 0; i < m_Scene->mNumMaterials; ++i)
     {
         m_Materials[i].SetFileName(m_FileName);
         m_Materials[i].Create(device, m_Scene->mMaterials[i]);
-    }
-
-    // FBX 파일에 해당하는 Mesh 정보 Create
-    //m_Meshes.resize(m_Scene->mNumMeshes);
-    for (unsigned int i = 0; i < m_Node->m_Nodes.size(); i++)
-    {
-        const aiNode* currentNode = m_Node->m_Nodes[i]->m_Node;
-        const aiMatrix4x4& worldTransform = m_Node->m_Nodes[i]->m_NodeWorldTM;
-
-        if (currentNode->mNumMeshes > 0)
-        {
-            for (unsigned int j = 0; j < currentNode->mNumMeshes; j++)
-            {
-                aiMesh* mesh = m_Scene->mMeshes[currentNode->mMeshes[j]];
-
-                // Mesh의 Create 함수를 호출하여 Mesh를 업데이트합니다.
-                Mesh currentMesh;
-                currentMesh.Create(device, mesh, worldTransform);
-                m_Meshes.push_back(currentMesh);
-            }
-        }
     }
 
     IsFileLoad = true;
@@ -97,15 +107,4 @@ void Model::Update(const float& deltaTime)
 void Model::Render()
 {
     // Mesh와 Material Render
-    /*for (unsigned int i = 0; i < m_Scene->mNumMeshes; ++i)
-    {
-        m_Meshes[i].Render();
-    }
-
-    for (unsigned int i = 0; i < m_Scene->mNumMaterials; ++i)
-    {
-        m_Materials[i].Render();
-    }*/
-
-    /*m_Node->Render(TODO);*/
 }
