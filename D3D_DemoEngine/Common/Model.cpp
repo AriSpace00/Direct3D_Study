@@ -46,6 +46,8 @@ void Model::ReadFile(ID3D11Device* device, const std::string& path)
         return;
     }
 
+    auto test = m_Scene->mNumMeshes;
+
     // Node가 존재한다면, FBX 파일에 해당하는 Node 정보 Create
     if (m_Scene->mRootNode != nullptr)
     {

@@ -86,7 +86,7 @@ void Mesh::Create(ID3D11Device* device, aiMesh* mesh, const aiMatrix4x4& nodeWor
     unique_ptr<WORD[]> indices(new WORD[mesh->mNumFaces * 3]);
     for (UINT i = 0; i < mesh->mNumFaces; i++)
     {
-        indices[i * 3 + 0] = mesh->mFaces[i].mIndices[0];
+        indices[i * 3 + 0] = mesh->mFaces[i].mIndices[0]; 
         indices[i * 3 + 1] = mesh->mFaces[i].mIndices[1];
         indices[i * 3 + 2] = mesh->mFaces[i].mIndices[2];
     }
