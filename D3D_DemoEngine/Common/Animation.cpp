@@ -11,35 +11,36 @@ Animation::~Animation()
 
 void Animation::Create(const aiNodeAnim* nodeAnim)
 {
-    // 위치, 회전 및 스케일 키 프레임 가져오기
-    AnimationKey* animKey = new AnimationKey();
+    m_NodeAnimation = nodeAnim;
+    m_NodeName = nodeAnim->mNodeName;
 
-    for (unsigned int i = 0; i < nodeAnim->mNumPositionKeys; i++) {
-        animKey->Position = ToXMFLOAT3(nodeAnim->mPositionKeys[i].mValue);
-        // 위치 키프레임 정보 사용
+    m_AnimationKeys.resize(nodeAnim->mNumPositionKeys);
+
+    // 애니메이션 키가 있을 때 해당 키 값을 가져옴
+    if (nodeAnim->mNumPositionKeys > 0)
+    {
+        for (int i = 0; i < nodeAnim->mNumPositionKeys; i++)
+        {
+            m_AnimationKeys[i] = new AnimationKey();
+
+            // 위치 키프레임 정보
+            m_AnimationKeys[i]->Time = nodeAnim->mPositionKeys[i].mTime;
+            m_AnimationKeys[i]->Position = ToXMFLOAT3(nodeAnim->mPositionKeys[i].mValue);
+
+            // 회전 키프레임 정보
+            m_AnimationKeys[i]->Rotation = ToXMFLOAT4(nodeAnim->mRotationKeys[i].mValue);
+
+            // 스케일 키프레임 정보
+            m_AnimationKeys[i]->Scaling = ToXMFLOAT3(nodeAnim->mScalingKeys[i].mValue);
+
+        }
     }
-
-    for (unsigned int i = 0; i < nodeAnim->mNumRotationKeys; i++) {
-        animKey->Rotation = ToXMFLOAT4(nodeAnim->mRotationKeys[i].mValue);
-        // 회전 키프레임 정보 사용
-    }
-
-    for (unsigned int i = 0; i < nodeAnim->mNumScalingKeys; i++) {
-        animKey->Scaling = ToXMFLOAT3(nodeAnim->mScalingKeys[i].mValue);
-        // 스케일 키프레임 정보 사용
-    }
-
-    m_AnimationKeys.push_back(animKey);
-    
 }
 
 void Animation::Evaluate(const float& progressTime, const Vector3& position, const Quaternion& rotation,
     const Vector3& Scaling)
 {
-}
-
-void Animation::Update(const float& deltaTime)
-{
+    // 키 보간하기
 }
 
 DirectX::XMFLOAT3 Animation::ToXMFLOAT3(const aiVector3D& aiVec)

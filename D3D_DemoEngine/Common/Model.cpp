@@ -6,7 +6,7 @@
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 
-#include"Node.h"
+#include "Node.h"
 #include "Helper.h"
 
 Model::Model()
@@ -46,14 +46,14 @@ void Model::ReadFile(ID3D11Device* device, const std::string& path)
         return;
     }
 
-    auto test = m_Scene->mNumMeshes;
+    auto test = m_Scene->mNumAnimations;
 
     // Node가 존재한다면, FBX 파일에 해당하는 Node 정보 Create
     if (m_Scene->mRootNode != nullptr)
     {
         m_Node = new Node();
-        m_Node->Create(m_Scene->mRootNode);
         m_Node->SetScene(m_Scene);
+        m_Node->Create(m_Scene->mRootNode);
 
         // FBX 파일에 해당하는 Mesh 정보 Create
         //m_Meshes.resize(m_Scene->mNumMeshes);

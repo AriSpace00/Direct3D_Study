@@ -21,7 +21,6 @@ public:
     Node* m_Node;
     std::vector<Mesh> m_Meshes;
     std::vector<Material> m_Materials;
-    std::vector<Node> m_Nodes;
     //std::vector<Animation> m_Animations;
 
     const aiScene* m_Scene;

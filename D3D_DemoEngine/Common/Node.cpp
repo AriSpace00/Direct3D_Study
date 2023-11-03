@@ -11,6 +11,18 @@ Node::~Node()
 
 void Node::Update(const float& deltaTime)
 {
+    for (int i = 0; i < m_Nodes.size(); i++)
+    {
+        if (m_Nodes[i]->m_NodeAnimPtr != nullptr)
+        {
+            // 노드의 local Transform을 애니메이션 Transform과 곱해서 업데이트
+            vector<AnimationKey*> nodeAnimKeys = m_Nodes[i]->m_NodeAnimation->m_AnimationKeys;
+            for (int j = 0; j < nodeAnimKeys.size(); j++)
+            {
+                nodeAnimKeys[j];
+            }
+        }
+    }
 }
 
 void Node::Render(ID3D11DeviceContext* deviceContext)
@@ -35,7 +47,7 @@ void Node::SetScene(const aiScene* scene)
     m_Scene = scene;
 }
 
-//const aiNodeAnim* Node::FindNodeAnimation(const string& nodeName)
+//const aiNodeAnim* Node::FindNodeAnimation(const aiString& nodeName)
 //{
 //    // 애니메이션 인덱스 (0부터 시작)
 //    unsigned int animationIndex = 0; // 애니메이션 인덱스 설정
@@ -46,8 +58,9 @@ void Node::SetScene(const aiScene* scene)
 //    // 애니메이션 노드 찾기
 //    for (unsigned int i = 0; i < animation->mNumChannels; i++) 
 //    {
-//        const aiNodeAnim* anim = animation->mChannels[i];
-//        if (anim->mNodeName.C_Str() == nodeName)
+//        aiNodeAnim* anim = animation->mChannels[i];
+//        
+//        if (anim->mNodeName == nodeName)
 //        {
 //            return anim;
 //        }
@@ -58,7 +71,7 @@ void Node::SetScene(const aiScene* scene)
 void Node::Create(const aiNode* node, int depth)
 {
     // 노드 이름 정보 저장 
-    NodeInfo* nodeInfo = new NodeInfo(node, depth);
+    NodeInfo* nodeInfo = new NodeInfo(node, depth, m_Scene);
 
     // 노드 월드 좌표계 설정
     if (node->mParent != nullptr)
@@ -69,9 +82,6 @@ void Node::Create(const aiNode* node, int depth)
     {
         nodeInfo->m_NodeWorldTM = nodeInfo->m_NodeLocalTM;
     }
-
-    // 해당하는 노드 애니메이션 탐색
-    //nodeInfo->m_NodeAnimPtr = FindNodeAnimation(nodeInfo->m_NodeName);
 
     // 노드 벡터에 추가
     m_Nodes.push_back(nodeInfo);
