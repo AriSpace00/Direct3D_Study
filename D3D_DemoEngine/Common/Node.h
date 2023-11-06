@@ -106,12 +106,17 @@ public:
 
 public:
     void SetScene(const aiScene* scene);
-    //const aiNodeAnim* FindNodeAnimation(const aiString& nodeName);
     void Create(const aiNode* node, int depth = 0);
 
     // 애니메이션 업데이트
     void Update(const float& deltaTime);
     void Render(ID3D11DeviceContext* device);
+
+private:
     aiMatrix4x4 GetParentWorldTransform(aiNode* parentNode);
+
+    // XMMATRIX를 aiMatrix4x4로 변환하는 함수
+    DirectX::XMFLOAT4X4 ConvertXMMATRIXToXMFLOAT4X4(const DirectX::XMMATRIX& xmMatrix);
+    aiMatrix4x4 ConvertXMMATRIXToaiMatrix4x4(const DirectX::XMMATRIX& xmMatrix);
 };
 

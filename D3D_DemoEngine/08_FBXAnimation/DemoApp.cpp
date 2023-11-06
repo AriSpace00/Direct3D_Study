@@ -63,6 +63,8 @@ void DemoApp::Update()
     __super::Update();
 
     float t = GameTimer::m_Instance->TotalTime();
+    float deltaTime = GameTimer::m_Instance->DeltaTime();
+    m_Model->Update(deltaTime);
 
     // y축을 기준으로 큐브 회전
     Matrix mSpin;
@@ -152,10 +154,6 @@ void DemoApp::Render()
         {
             m_DeviceContext->OMSetBlendState(nullptr, nullptr, 0xffffffff);
         }
-
-        auto t1 = m_Meshes[i].m_VertexBuffer;
-        auto t2 = m_Meshes[i].m_VertexBufferStride;
-        auto t3 = m_Meshes[i].m_VertexBufferOffset;
 
         m_DeviceContext->UpdateSubresource(m_CBMaterial, 0, nullptr, &m_Material, 0, 0);
         m_DeviceContext->IASetIndexBuffer(m_Meshes[i].m_IndexBuffer, DXGI_FORMAT_R16_UINT, 0);

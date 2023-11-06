@@ -3,7 +3,6 @@
 // Animation Class
 // Node Animation을 업데이트하고, 이를 Node Class에 연결한다.
 
-#include <string>
 #include <vector>
 #include <directxtk/SimpleMath.h>
 
@@ -27,16 +26,21 @@ public:
     ~Animation();
 
 public:
-    aiString m_NodeName;
+    int m_CurKeyIndex = 0;
+    int m_AnimFps = 30;
     float m_Duration = 0.0f;
-    vector<AnimationKey*> m_AnimationKeys;
+
+    aiString m_NodeName;
     const aiNodeAnim* m_NodeAnimation;
+    vector<AnimationKey*> m_AnimationKeys;
 
 public:
     // 노드 애니메이션 생성
     void Create(const aiNodeAnim* nodeAnim);
     // 애니메이션 키 보간
     void Evaluate(const float& progressTime, const Vector3& position, const Quaternion& rotation, const Vector3& Scaling);
+
+    void Update(const float& deltaTime);
 
     DirectX::XMFLOAT3 ToXMFLOAT3(const aiVector3D& aiVec);
     DirectX::XMFLOAT4 ToXMFLOAT4(const aiQuaternion& aiQuat);

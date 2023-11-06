@@ -104,6 +104,8 @@ void Model::UpdateAnimation()
 
 void Model::Update(const float& deltaTime)
 {
+    // 애니메이션을 위한 모델 업데이트
+    m_Node->Update(deltaTime);
 }
 
 void Model::Render()

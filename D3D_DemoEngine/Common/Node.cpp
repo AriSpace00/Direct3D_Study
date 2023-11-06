@@ -11,16 +11,23 @@ Node::~Node()
 
 void Node::Update(const float& deltaTime)
 {
+    // 애니메이션을 위한 노드 트랜스폼 업데이트
     for (int i = 0; i < m_Nodes.size(); i++)
     {
         if (m_Nodes[i]->m_NodeAnimPtr != nullptr)
         {
+            m_Nodes[i]->m_NodeAnimation->Update(deltaTime);
+
             // 노드의 local Transform을 애니메이션 Transform과 곱해서 업데이트
-            vector<AnimationKey*> nodeAnimKeys = m_Nodes[i]->m_NodeAnimation->m_AnimationKeys;
-            for (int j = 0; j < nodeAnimKeys.size(); j++)
-            {
-                nodeAnimKeys[j];
-            }
+            vector<AnimationKey*>& nodeAnimKeys = m_Nodes[i]->m_NodeAnimation->m_AnimationKeys;
+            int curKeyIndex = m_Nodes[i]->m_NodeAnimation->m_CurKeyIndex;
+            if (curKeyIndex > 0)curKeyIndex--;
+
+            Matrix animTM = Matrix::CreateScale(nodeAnimKeys[curKeyIndex]->Scaling) * Matrix::CreateFromQuaternion(nodeAnimKeys[curKeyIndex]->Rotation) * Matrix::CreateTranslation(nodeAnimKeys[curKeyIndex]->Position);
+
+            aiMatrix4x4 nodeWorldTM = m_Nodes[i]->m_NodeLocalTM * ConvertXMMATRIXToaiMatrix4x4(animTM);
+            m_Nodes[i]->m_NodeWorldTM = nodeWorldTM;
+            
         }
     }
 }
@@ -46,27 +53,6 @@ void Node::SetScene(const aiScene* scene)
 {
     m_Scene = scene;
 }
-
-//const aiNodeAnim* Node::FindNodeAnimation(const aiString& nodeName)
-//{
-//    // 애니메이션 인덱스 (0부터 시작)
-//    unsigned int animationIndex = 0; // 애니메이션 인덱스 설정
-//
-//    // 애니메이션 데이터 가져오기
-//    const aiAnimation* animation = m_Scene->mAnimations[animationIndex];
-//
-//    // 애니메이션 노드 찾기
-//    for (unsigned int i = 0; i < animation->mNumChannels; i++) 
-//    {
-//        aiNodeAnim* anim = animation->mChannels[i];
-//        
-//        if (anim->mNodeName == nodeName)
-//        {
-//            return anim;
-//        }
-//        return nullptr;
-//    }
-//}
 
 void Node::Create(const aiNode* node, int depth)
 {
@@ -99,4 +85,34 @@ void Node::Create(const aiNode* node, int depth)
         // 자식 노드가 없다면 depth값에 따라 m_Nodes sort
         sort(m_Nodes.begin(), m_Nodes.end(), [](const NodeInfo* a, const NodeInfo* b)-> bool {return a->m_Depth < b->m_Depth; });
     }
+}
+
+DirectX::XMFLOAT4X4 Node::ConvertXMMATRIXToXMFLOAT4X4(const DirectX::XMMATRIX& xmMatrix)
+{
+    DirectX::XMFLOAT4X4 result;
+    DirectX::XMStoreFloat4x4(&result, xmMatrix);
+    return result;
+}
+
+aiMatrix4x4 Node::ConvertXMMATRIXToaiMatrix4x4(const DirectX::XMMATRIX& xmMatrix)
+{
+    DirectX::XMFLOAT4X4 float4x4 = ConvertXMMATRIXToXMFLOAT4X4(xmMatrix);
+    aiMatrix4x4 aiMatrix;
+    aiMatrix.a1 = float4x4._11;
+    aiMatrix.a2 = float4x4._12;
+    aiMatrix.a3 = float4x4._13;
+    aiMatrix.a4 = float4x4._14;
+    aiMatrix.b1 = float4x4._21;
+    aiMatrix.b2 = float4x4._22;
+    aiMatrix.b3 = float4x4._23;
+    aiMatrix.b4 = float4x4._24;
+    aiMatrix.c1 = float4x4._31;
+    aiMatrix.c2 = float4x4._32;
+    aiMatrix.c3 = float4x4._33;
+    aiMatrix.c4 = float4x4._34;
+    aiMatrix.d1 = float4x4._41;
+    aiMatrix.d2 = float4x4._42;
+    aiMatrix.d3 = float4x4._43;
+    aiMatrix.d4 = float4x4._44;
+    return aiMatrix;
 }

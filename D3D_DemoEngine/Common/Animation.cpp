@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "Animation.h"
+#include "TimeSystem.h"
 
 Animation::Animation()
 {
@@ -41,6 +42,16 @@ void Animation::Evaluate(const float& progressTime, const Vector3& position, con
     const Vector3& Scaling)
 {
     // 키 보간하기
+}
+
+void Animation::Update(const float& deltaTime)
+{
+    m_Duration += deltaTime;
+    if (m_Duration > m_AnimationKeys[m_CurKeyIndex]->Time / m_AnimFps)
+    {
+        m_CurKeyIndex = (m_CurKeyIndex + 1) % 32;
+        m_Duration = 0.f;
+    }
 }
 
 DirectX::XMFLOAT3 Animation::ToXMFLOAT3(const aiVector3D& aiVec)
