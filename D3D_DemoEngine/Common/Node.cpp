@@ -12,7 +12,7 @@ Node::~Node()
 void Node::Update(const float& deltaTime)
 {
     // 애니메이션을 위한 노드 트랜스폼 업데이트
-    for (int i = 0; i < m_Nodes.size(); i++)
+    for (int i = 0; i < m_Nodes.size(); i++) 
     {
         if (m_Nodes[i]->m_NodeAnimPtr != nullptr)
         {
@@ -21,13 +21,12 @@ void Node::Update(const float& deltaTime)
             // 노드의 local Transform을 애니메이션 Transform과 곱해서 업데이트
             vector<AnimationKey*>& nodeAnimKeys = m_Nodes[i]->m_NodeAnimation->m_AnimationKeys;
             int curKeyIndex = m_Nodes[i]->m_NodeAnimation->m_CurKeyIndex;
-            if (curKeyIndex > 0)curKeyIndex--;
+            if (curKeyIndex > 0) curKeyIndex--;
 
             Matrix animTM = Matrix::CreateScale(nodeAnimKeys[curKeyIndex]->Scaling) * Matrix::CreateFromQuaternion(nodeAnimKeys[curKeyIndex]->Rotation) * Matrix::CreateTranslation(nodeAnimKeys[curKeyIndex]->Position);
 
             aiMatrix4x4 nodeWorldTM = m_Nodes[i]->m_NodeLocalTM * ConvertXMMATRIXToaiMatrix4x4(animTM);
             m_Nodes[i]->m_NodeWorldTM = nodeWorldTM;
-            
         }
     }
 }

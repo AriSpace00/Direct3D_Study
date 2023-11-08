@@ -49,9 +49,11 @@ void Animation::Update(const float& deltaTime)
     m_Duration += deltaTime;
     if (m_Duration > m_AnimationKeys[m_CurKeyIndex]->Time / m_AnimFps)
     {
-        m_CurKeyIndex = (m_CurKeyIndex + 1) % 32;
+        m_CurKeyIndex = (m_CurKeyIndex + 1) % m_AnimationKeys.size();
         m_Duration = 0.f;
     }
+
+    auto test = m_CurKeyIndex;
 }
 
 DirectX::XMFLOAT3 Animation::ToXMFLOAT3(const aiVector3D& aiVec)

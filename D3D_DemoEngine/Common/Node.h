@@ -85,6 +85,7 @@ struct NodeInfo
             if (anim->mNodeName == m_NodeName)
             {
                 m_NodeAnimPtr = anim;
+                break;
             }
             else
             {

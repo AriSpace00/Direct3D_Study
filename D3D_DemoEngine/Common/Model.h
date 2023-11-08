@@ -21,7 +21,7 @@ public:
     Node* m_Node;
     std::vector<Mesh> m_Meshes;
     std::vector<Material> m_Materials;
-    //std::vector<Animation> m_Animations;
+    std::vector<Animation> m_Animations;
 
     const aiScene* m_Scene;
     Assimp::Importer m_Importer;

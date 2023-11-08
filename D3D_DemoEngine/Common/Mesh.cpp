@@ -93,6 +93,13 @@ void Mesh::Create(ID3D11Device* device, aiMesh* mesh, const aiMatrix4x4& nodeWor
     CreateIndexBuffer(device, indices.get(), mesh->mNumFaces * 3);
 }
 
+void Mesh::Update(const float& deltaTime)
+{
+   
+   
+   
+}
+
 void Mesh::Render()
 {
     // Node Render

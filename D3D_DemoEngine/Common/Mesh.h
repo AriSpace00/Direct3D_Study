@@ -5,6 +5,7 @@
 // 3d 모델로부터 불러온 버텍스 정보로 인덱스 버퍼를 생성한다.
 
 #include <d3d11.h>
+#include <memory>
 #include <wrl/client.h>
 #include <directxtk/SimpleMath.h>
 
@@ -40,6 +41,8 @@ public:
     UINT m_IndexCount = 0;            // 인덱스 개수
     UINT m_MaterialIndex = 0;         // 머테리얼 인덱스
 
+    unique_ptr<Vertex[]> m_Vertices;
+
 private:
     // aiMesh로부터 불러온 정보로 Create 함수를 진행하기 위한 내부함수
     // 버텍스 버퍼 생성
@@ -50,6 +53,7 @@ private:
 public:
     // aiMesh로부터 불러온 정보로 버텍스 버퍼 & 인덱스 버퍼 생성
     void Create(ID3D11Device* device, aiMesh* mesh, const aiMatrix4x4& nodeWorldTransform);
+    void Update(const float& deltaTime);
     void Render();
 };
 
