@@ -106,9 +106,29 @@ void Model::Update(const float& deltaTime)
 {
     // 애니메이션을 위한 모델 업데이트
     m_Node->Update(deltaTime);
+
+    // FBX 파일에 해당하는 Mesh 정보 Update
+    for (unsigned int i = 0; i < m_Node->m_Nodes.size(); i++)
+    {
+        const aiNode* currentNode = m_Node->m_Nodes[i]->m_Node;
+        const aiMatrix4x4& worldTransform = m_Node->m_Nodes[i]->m_NodeWorldTM;
+
+        if (currentNode->mNumMeshes > 0)
+        {
+            for (unsigned int j = 0; j < currentNode->mNumMeshes; j++)
+            {
+                m_Meshes[j].Update(m_Scene->mMeshes[j], worldTransform);
+            }
+        }
+    }
 }
 
 void Model::Render()
 {
     // Mesh와 Material Render
+}
+
+void Model::SetDC(ID3D11DeviceContext* deviceContext)
+{
+    m_DeviceContext = deviceContext;
 }

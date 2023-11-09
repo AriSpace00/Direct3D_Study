@@ -64,7 +64,7 @@ void DemoApp::Update()
 
     float t = GameTimer::m_Instance->TotalTime();
     float deltaTime = GameTimer::m_Instance->DeltaTime();
-    m_Model->Update(deltaTime);
+    //m_Model->Update(deltaTime);
 
     // y축을 기준으로 큐브 회전
     Matrix mSpin;
@@ -88,9 +88,10 @@ void DemoApp::Render()
     // Draw 계열 함수를 호출하기 전에 렌더링 파이프라인에 필수 스테이지 설정을 해야한다.
     m_DeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     m_DeviceContext->IASetInputLayout(m_InputLayout);
+
     m_DeviceContext->VSSetShader(m_VertexShader, nullptr, 0);
     m_DeviceContext->VSSetConstantBuffers(0, 1, &m_CBTransform);
-    m_DeviceContext->PSSetConstantBuffers(1, 1, &m_CBDirectionalLight);
+
     m_DeviceContext->PSSetShader(m_PixelShader, nullptr, 0);
     m_DeviceContext->PSSetConstantBuffers(0, 1, &m_CBTransform);
     m_DeviceContext->PSSetConstantBuffers(1, 1, &m_CBDirectionalLight);
@@ -118,34 +119,12 @@ void DemoApp::Render()
         m_DeviceContext->PSSetShaderResources(3, 1, &m_Materials[mi].m_EmissiveRV);
         m_DeviceContext->PSSetShaderResources(4, 1, &m_Materials[mi].m_OpacityRV);
 
-
-        if (m_Materials[mi].m_DiffuseRV != nullptr)
-        {
-            IsDiffuseExist = true;
-        }
-        if (m_Materials[mi].m_NormalRV != nullptr)
-        {
-            IsNormalExist = true;
-        }
-        if (m_Materials[mi].m_SpecularRV != nullptr)
-        {
-            IsSpecularExist = true;
-        }
-        if (m_Materials[mi].m_EmissiveRV != nullptr)
-        {
-            IsEmissiveExist = true;
-        }
-        if (m_Materials[mi].m_OpacityRV != nullptr)
-        {
-            IsOpacityExist = true;
-        }
-
         m_Material.UseDiffuseMap = m_Materials[mi].m_DiffuseRV != nullptr ? true : false;
         m_Material.UseNormalMap = m_Materials[mi].m_NormalRV != nullptr ? true : false;
         m_Material.UseSpecularMap = m_Materials[mi].m_SpecularRV != nullptr ? true : false;
         m_Material.UseEmissiveMap = m_Materials[mi].m_EmissiveRV != nullptr ? true : false;
         m_Material.UseOpacityMap = m_Materials[mi].m_OpacityRV != nullptr ? true : false;
-       
+
         if (m_Material.UseOpacityMap)
         {
             m_DeviceContext->OMSetBlendState(m_AlphaBlendState, nullptr, 0xffffffff);
@@ -204,13 +183,13 @@ void DemoApp::Render()
             float z = XMVectorGetZ(m_Eye);
             ImGui::Text("X");
             ImGui::SameLine();
-            ImGui::SliderFloat("##cwx", &x, -1000.0f, 1000.0f);
+            ImGui::SliderFloat("##cwx", &x, -1000.0f, 10000.0f);
             ImGui::Text("Y");
             ImGui::SameLine();
-            ImGui::SliderFloat("##cwy", &y, -1000.0f, 1000.0f);
+            ImGui::SliderFloat("##cwy", &y, -1000.0f, 10000.0f);
             ImGui::Text("Z");
             ImGui::SameLine();
-            ImGui::SliderFloat("##cwz", &z, -1000.0f, 0.0f);
+            ImGui::SliderFloat("##cwz", &z, -10000.0f, 0.0f);
             m_Eye = DirectX::XMVectorSet(x, y, z, 0.0f);
             m_ViewMatrix = XMMatrixLookToLH(m_Eye, m_At, m_Up);
 
@@ -589,6 +568,7 @@ bool DemoApp::InitScene()
     // Model 클래스로 FBX Load
     m_Model = new Model();
     m_Model->ReadFile(m_Device, filePath);
+    m_Model->SetDC(m_DeviceContext);
 
     return true;
 }

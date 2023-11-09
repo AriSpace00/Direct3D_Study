@@ -29,11 +29,15 @@ public:
     std::wstring m_FileName;
     bool IsFileLoad;
 
+    ID3D11DeviceContext* m_DeviceContext;
+
 public:
     void ReadFile(ID3D11Device* device, const std::string& path);
     void UpdateAnimation();
 
     void Update(const float& deltaTime);
     void Render();
+
+    void SetDC(ID3D11DeviceContext* deviceContext);
 };
 

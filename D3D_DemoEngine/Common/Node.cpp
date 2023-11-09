@@ -25,8 +25,17 @@ void Node::Update(const float& deltaTime)
 
             Matrix animTM = Matrix::CreateScale(nodeAnimKeys[curKeyIndex]->Scaling) * Matrix::CreateFromQuaternion(nodeAnimKeys[curKeyIndex]->Rotation) * Matrix::CreateTranslation(nodeAnimKeys[curKeyIndex]->Position);
 
-            aiMatrix4x4 nodeWorldTM = m_Nodes[i]->m_NodeLocalTM * ConvertXMMATRIXToaiMatrix4x4(animTM);
-            m_Nodes[i]->m_NodeWorldTM = nodeWorldTM;
+            aiMatrix4x4 nodeWorldTM = ConvertXMMATRIXToaiMatrix4x4(animTM);
+
+            if(m_Nodes[i]->m_Node->mParent != nullptr)
+            {
+                aiMatrix4x4 parentWorldTM = GetParentWorldTransform(m_Nodes[i]->m_Node->mParent);
+                m_Nodes[i]->m_NodeWorldTM = nodeWorldTM * parentWorldTM;
+            }
+            else
+            {
+                m_Nodes[i]->m_NodeWorldTM = nodeWorldTM;
+            }
         }
     }
 }

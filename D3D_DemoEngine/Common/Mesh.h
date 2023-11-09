@@ -41,19 +41,19 @@ public:
     UINT m_IndexCount = 0;            // 인덱스 개수
     UINT m_MaterialIndex = 0;         // 머테리얼 인덱스
 
-    unique_ptr<Vertex[]> m_Vertices;
+    vector<Vertex> m_Vertices;
+    vector<WORD> m_Indices;
 
 private:
     // aiMesh로부터 불러온 정보로 Create 함수를 진행하기 위한 내부함수
     // 버텍스 버퍼 생성
-    void CreateVertexBuffer(ID3D11Device* device, Vertex* vertices, UINT vertexCount);
+    void CreateVertexBuffer(ID3D11Device* device, const vector<Vertex>& vertices, UINT vertexCount);
     // 인덱스 버퍼 생성
-    void CreateIndexBuffer(ID3D11Device* device, WORD* indices, UINT indexCount);
+    void CreateIndexBuffer(ID3D11Device* device, const vector<WORD>& indices, UINT indexCount);
 
 public:
     // aiMesh로부터 불러온 정보로 버텍스 버퍼 & 인덱스 버퍼 생성
     void Create(ID3D11Device* device, aiMesh* mesh, const aiMatrix4x4& nodeWorldTransform);
-    void Update(const float& deltaTime);
     void Render();
 };
 
