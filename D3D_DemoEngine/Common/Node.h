@@ -115,9 +115,5 @@ public:
 
 private:
     aiMatrix4x4 GetParentWorldTransform(aiNode* parentNode);
-
-    // XMMATRIX를 aiMatrix4x4로 변환하는 함수
-    DirectX::XMFLOAT4X4 ConvertXMMATRIXToXMFLOAT4X4(const DirectX::XMMATRIX& xmMatrix);
-    aiMatrix4x4 ConvertXMMATRIXToaiMatrix4x4(const DirectX::XMMATRIX& xmMatrix);
 };
 

@@ -11,13 +11,6 @@
 using namespace DirectX::SimpleMath;
 using namespace DirectX;
 
-struct CB_Transform
-{
-    Matrix WorldMatrix;
-    Matrix ViewMatrix;
-    Matrix ProjectionMatrix;
-};
-
 struct CB_DirectionalLight
 {
     Vector3 Direction = { 0.0f,0.0f,1.0f };
@@ -30,26 +23,6 @@ struct CB_DirectionalLight
 };
 
 static_assert((sizeof(CB_DirectionalLight) % 16) == 0, "Constant Buffer size must be 16-byte aligned");
-
-struct CB_Material
-{
-    Vector4 Ambient = { 1.0f,1.0f,1.0f,1.0f };
-    Vector4 Diffuse = { 1.0f,1.0f,1.0f,1.0f };
-    Vector4 Specular = { 1.0f,1.0f,1.0f,1.0f };
-    Vector4 Emissive = { 1.0f,1.0f,1.0f,1.0f };
-    float SpecularPower = 80;
-    bool UseDiffuseMap = true;
-    bool MT_pad0[3];
-    bool UseNormalMap = true;
-    bool MT_pad1[3];
-    bool UseSpecularMap = true;
-    bool MT_pad2[3];
-    bool UseEmissiveMap = true;
-    bool MT_pad3[3];
-    bool UseOpacityMap = true;
-    bool MT_pad4[3];
-    Vector2 MT_pad5;
-};
 
 class DemoApp :
     public GameApp
@@ -70,21 +43,16 @@ public:
     ID3D11PixelShader* m_PixelShader = nullptr;             // 픽셀 셰이더
     ID3D11InputLayout* m_InputLayout = nullptr;             // 입력 레이아웃
     ID3D11SamplerState* m_SamplerLinear = nullptr;          // 샘플러 상태
-    ID3D11BlendState* m_AlphaBlendState = nullptr;          // 샘플러 상태
 
-    ID3D11Buffer* m_CBMaterial = nullptr;                   // 상수 버퍼: 변환행렬
-    ID3D11Buffer* m_CBTransform = nullptr;                  // 상수 버퍼: 변환행렬
     ID3D11Buffer* m_CBDirectionalLight = nullptr;           // 상수 버퍼: 방향광
 
     UINT m_VertexBufferStride = 0;						    // 버텍스 하나의 크기.
     UINT m_VertexBufferOffset = 0;						    // 버텍스 버퍼의 오프셋.
 
-    Matrix m_WorldMatrix;                                   // 월드좌표계 공간으로 변환을 위한 행렬
+    //Matrix m_WorldMatrix;                                   // 월드좌표계 공간으로 변환을 위한 행렬
     Matrix m_ViewMatrix;                                    // 카메라좌표계(뷰좌표계) 공간으로 변환을 위한 행렬
     Matrix m_ProjectionMatrix;                              // 단위장치좌표계(Normalized Device Coordinate) 공간으로 변환을 위한 행렬
 
-    CB_Transform m_Transform;
-    CB_Material m_Material;
     CB_DirectionalLight m_Light;
     float m_MeshScale = 1.0f;
 

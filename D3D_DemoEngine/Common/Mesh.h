@@ -54,6 +54,6 @@ private:
 public:
     // aiMesh로부터 불러온 정보로 버텍스 버퍼 & 인덱스 버퍼 생성
     void Create(ID3D11Device* device, aiMesh* mesh, const aiMatrix4x4& nodeWorldTransform);
-    void Render();
+    void Update(const float& deltaTime);
 };
 

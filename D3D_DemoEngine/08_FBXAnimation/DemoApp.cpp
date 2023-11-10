@@ -7,24 +7,12 @@
 #include <imgui_impl_win32.h>
 #include <imgui_impl_dx11.h>
 
-#include <assimp/Importer.hpp>
-#include <assimp/scene.h>
-#include <assimp/postprocess.h>
-
 #include "../Common/Node.h"
-
 
 #pragma comment(lib, "d3d11.lib")
 #pragma comment(lib, "d3dcompiler.lib")
 
 using namespace DirectX::SimpleMath;
-
-static bool IsDiffuseExist;
-static bool IsNormalExist;
-static bool IsSpecularExist;
-static bool IsEmissiveExist;
-static bool IsOpacityExist;
-
 
 DemoApp::DemoApp(HINSTANCE hInstance)
     : GameApp(hInstance)
@@ -32,7 +20,6 @@ DemoApp::DemoApp(HINSTANCE hInstance)
     , m_CameraFar(9999.9f)
     , m_CameraFovYRadius(90.0f)
 {
-
 }
 
 DemoApp::~DemoApp()
@@ -64,7 +51,7 @@ void DemoApp::Update()
 
     float t = GameTimer::m_Instance->TotalTime();
     float deltaTime = GameTimer::m_Instance->DeltaTime();
-    //m_Model->Update(deltaTime);
+    m_Model->Update(deltaTime);
 
     // y축을 기준으로 큐브 회전
     Matrix mSpin;
@@ -74,7 +61,7 @@ void DemoApp::Update()
 
     // 크기 변경
     Matrix mScale = XMMatrixScaling(m_MeshScale, m_MeshScale, m_MeshScale);
-    m_WorldMatrix = mScale * mSpin;
+    //m_Model->m_WorldMatrix = mScale * mSpin;
 
     m_Light.EyePosition = m_Eye;
 }
@@ -90,55 +77,21 @@ void DemoApp::Render()
     m_DeviceContext->IASetInputLayout(m_InputLayout);
 
     m_DeviceContext->VSSetShader(m_VertexShader, nullptr, 0);
-    m_DeviceContext->VSSetConstantBuffers(0, 1, &m_CBTransform);
-
     m_DeviceContext->PSSetShader(m_PixelShader, nullptr, 0);
-    m_DeviceContext->PSSetConstantBuffers(0, 1, &m_CBTransform);
+    
     m_DeviceContext->PSSetConstantBuffers(1, 1, &m_CBDirectionalLight);
-    m_DeviceContext->PSSetConstantBuffers(2, 1, &m_CBMaterial);
+    
     m_DeviceContext->PSSetSamplers(0, 1, &m_SamplerLinear);
 
     // Cube, Lighting matrix 를 m_Transform 에 설정
-    m_Transform.WorldMatrix = XMMatrixTranspose(m_WorldMatrix);
-    m_Transform.ViewMatrix = XMMatrixTranspose(m_ViewMatrix);
-    m_Transform.ProjectionMatrix = XMMatrixTranspose(m_ProjectionMatrix);
-    m_DeviceContext->UpdateSubresource(m_CBTransform, 0, nullptr, &m_Transform, 0, 0);
+    m_Model->m_Transform.ViewMatrix = XMMatrixTranspose(m_ViewMatrix);
+    m_Model->m_Transform.ProjectionMatrix = XMMatrixTranspose(m_ProjectionMatrix);
+
     m_Light.Direction.Normalize();
     m_DeviceContext->UpdateSubresource(m_CBDirectionalLight, 0, nullptr, &m_Light, 0, 0);
 
-    m_Meshes = m_Model->m_Meshes;
-    m_Materials = m_Model->m_Materials;
-
-    for (size_t i = 0; i < m_Meshes.size(); i++)
-    {
-        size_t mi = m_Meshes[i].m_MaterialIndex;
-
-        m_DeviceContext->PSSetShaderResources(0, 1, &m_Materials[mi].m_DiffuseRV);
-        m_DeviceContext->PSSetShaderResources(1, 1, &m_Materials[mi].m_NormalRV);
-        m_DeviceContext->PSSetShaderResources(2, 1, &m_Materials[mi].m_SpecularRV);
-        m_DeviceContext->PSSetShaderResources(3, 1, &m_Materials[mi].m_EmissiveRV);
-        m_DeviceContext->PSSetShaderResources(4, 1, &m_Materials[mi].m_OpacityRV);
-
-        m_Material.UseDiffuseMap = m_Materials[mi].m_DiffuseRV != nullptr ? true : false;
-        m_Material.UseNormalMap = m_Materials[mi].m_NormalRV != nullptr ? true : false;
-        m_Material.UseSpecularMap = m_Materials[mi].m_SpecularRV != nullptr ? true : false;
-        m_Material.UseEmissiveMap = m_Materials[mi].m_EmissiveRV != nullptr ? true : false;
-        m_Material.UseOpacityMap = m_Materials[mi].m_OpacityRV != nullptr ? true : false;
-
-        if (m_Material.UseOpacityMap)
-        {
-            m_DeviceContext->OMSetBlendState(m_AlphaBlendState, nullptr, 0xffffffff);
-        }
-        else
-        {
-            m_DeviceContext->OMSetBlendState(nullptr, nullptr, 0xffffffff);
-        }
-
-        m_DeviceContext->UpdateSubresource(m_CBMaterial, 0, nullptr, &m_Material, 0, 0);
-        m_DeviceContext->IASetIndexBuffer(m_Meshes[i].m_IndexBuffer, DXGI_FORMAT_R16_UINT, 0);
-        m_DeviceContext->IASetVertexBuffers(0, 1, &m_Meshes[i].m_VertexBuffer, &m_Meshes[i].m_VertexBufferStride, &m_Meshes[i].m_VertexBufferOffset);
-        m_DeviceContext->DrawIndexed(m_Meshes[i].m_IndexCount, 0, 0);
-    }
+    // Model Render
+    m_Model->Render(m_DeviceContext);
 
     // ImGui
     {
@@ -267,35 +220,16 @@ void DemoApp::Render()
 
             ImGui::Text("[Material]");
             ImGui::Text("Material Ambient");
-            ImGui::ColorEdit4("##ma", (float*)&m_Material.Ambient);
+            ImGui::ColorEdit4("##ma", (float*)&m_Model->m_Material.Ambient);
             ImGui::Text("Material Diffuse");
-            ImGui::ColorEdit4("##md", (float*)&m_Material.Diffuse);
+            ImGui::ColorEdit4("##md", (float*)&m_Model->m_Material.Diffuse);
             ImGui::Text("Material Specular");
-            ImGui::ColorEdit4("##ms", (float*)&m_Material.Specular);
+            ImGui::ColorEdit4("##ms", (float*)&m_Model->m_Material.Specular);
             ImGui::Text("Material Specular Power");
-            ImGui::SliderFloat("##sp", &m_Material.SpecularPower, 2.0f, 4096.0f);
+            ImGui::SliderFloat("##sp", &m_Model->m_Material.SpecularPower, 2.0f, 4096.0f);
 
             ImGui::End();
         }
-
-        // 4. 모델링 변경 윈도우
-        /*ImGui::SetNextWindowSize(ImVec2(200, 200));
-        ImGui::SetNextWindowPos(ImVec2(1720, 0));
-        {
-            ImGui::Begin("Model Change Window");
-
-            ImGui::Text("Mdoel Index");
-            ImGui::Text("0 : box");
-            ImGui::Text("1 : Character");
-            ImGui::Text("2 : IcoSphere");
-            ImGui::Text("3 : Monkey");
-            ImGui::Text("4 : Torus");
-            ImGui::Text("5 : Tree");
-            ImGui::Text("6 : zeldaPosed001");
-
-            m_FBXModelIndex = ImGui::SliderFloat("##mi", (float*)& m_FBXModelIndex, 0.0f, 6.0f);
-            ImGui::End();
-        }*/
 
         ImGui::Render();
         ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
@@ -386,21 +320,6 @@ bool DemoApp::InitD3D()
 
     m_DeviceContext->OMSetRenderTargets(1, &m_RenderTargetView, m_DepthStencilView);
 
-    // 7. 투명 처리를 위한 블렌드 상태 생성
-    D3D11_BLEND_DESC blendDesc = {};
-    blendDesc.AlphaToCoverageEnable = false;
-    blendDesc.IndependentBlendEnable = false;
-    blendDesc.RenderTarget[0].BlendEnable = true;
-    blendDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
-    blendDesc.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
-    blendDesc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
-    blendDesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
-    blendDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ONE;
-    blendDesc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
-    blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
-
-    HR_T(m_Device->CreateBlendState(&blendDesc, &m_AlphaBlendState));
-
     return true;
 }
 
@@ -418,97 +337,7 @@ bool DemoApp::InitScene()
     HRESULT hr = 0;
     ID3D10Blob* errorMessage = nullptr; // 컴파일 에러 메시지가 저장될 버퍼
 
-    // 1. Render() 에서 파이프라인에 바인딩할 버텍스 버퍼 및 버퍼 정보 준비
-
-    // 2. Render() 에서 파이프라인에 바인딩할 InputLayout 생성
-    // Input Layout은 버텍스 셰이더가 입력받을 데이터의 형식을 지정한다.
-    // SemanticName , SemanticIndex , Format , InputSlot , AlignedByteOffset , InputSlotClass , InstanceDataStepRate
-
-    // 버텍스 셰이더가 문제없이 생성된 후 Input Layout 생성
-    ID3DBlob* vertexShaderBuffer = nullptr;
-    HR_T(CompileShaderFromFile(L"FBXAnimVS.hlsl", "main", "vs_4_0", &vertexShaderBuffer));
-    if (FAILED(hr))
-    {
-        MessageBoxA(m_hWnd, (char*)errorMessage->GetBufferPointer(), "Vertex Shader 오류", MB_OK);
-        SAFE_RELEASE(errorMessage);
-        return false;
-    }
-
-    D3D11_INPUT_ELEMENT_DESC layout[] =
-    {
-        {"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0},
-        { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-        {"NORMAL",    0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
-        {"TANGENT",    0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0}
-    };
-
-    HR_T(m_Device->CreateInputLayout(layout, ARRAYSIZE(layout), vertexShaderBuffer->GetBufferPointer(), vertexShaderBuffer->GetBufferSize(), &m_InputLayout));
-
-    // 3. Render() 에서 파이프라인에 바인딩할 버텍스 셰이더 생성
-    HR_T(m_Device->CreateVertexShader(vertexShaderBuffer->GetBufferPointer(), vertexShaderBuffer->GetBufferSize(), NULL, &m_VertexShader));
-    SAFE_RELEASE(vertexShaderBuffer);
-
-    // 4. Render() 에서 파이프라인에 바인딩할 인덱스 버퍼 생성
-
-    // 5. Render() 에서 파이프라인에 바인딩할 픽셀 셰이더 생성
-    ID3DBlob* pixelShaderBuffer = nullptr;
-    HR_T(CompileShaderFromFile(L"FBXAnimPS.hlsl", "main", "ps_4_0", &pixelShaderBuffer));
-    if (FAILED(hr))
-    {
-        MessageBoxA(m_hWnd, (char*)errorMessage->GetBufferPointer(), "Pixel Shader 생성 오류", MB_OK);
-        SAFE_RELEASE(errorMessage);
-        return false;
-    }
-    HR_T(m_Device->CreatePixelShader(pixelShaderBuffer->GetBufferPointer(), pixelShaderBuffer->GetBufferSize(), NULL, &m_PixelShader));
-    SAFE_RELEASE(pixelShaderBuffer);
-
-    // 6. Render() 에서 파이프라인에 바인딩할 상수 버퍼 생성
-    D3D11_BUFFER_DESC bd = {};
-    bd.Usage = D3D11_USAGE_DEFAULT;
-    bd.ByteWidth = sizeof(CB_Transform);
-    bd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-    bd.CPUAccessFlags = 0;
-    HR_T(m_Device->CreateBuffer(&bd, nullptr, &m_CBTransform));
-
-    bd.Usage = D3D11_USAGE_DEFAULT;
-    bd.ByteWidth = sizeof(CB_DirectionalLight);
-    bd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-    bd.CPUAccessFlags = 0;
-    HR_T(m_Device->CreateBuffer(&bd, nullptr, &m_CBDirectionalLight));
-
-    bd.Usage = D3D11_USAGE_DEFAULT;
-    bd.ByteWidth = sizeof(CB_Material);
-    bd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-    bd.CPUAccessFlags = 0;
-    HR_T(m_Device->CreateBuffer(&bd, nullptr, &m_CBMaterial));
-
-    // Sample state 생성
-    D3D11_SAMPLER_DESC sampDesc = {};
-    sampDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
-    sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
-    sampDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
-    sampDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
-    sampDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
-    sampDesc.MinLOD = 0;
-    sampDesc.MaxLOD = D3D11_FLOAT32_MAX;
-    HR_T(m_Device->CreateSamplerState(&sampDesc, &m_SamplerLinear));
-
-    // 7. 쉐이더에 전달할 데이터 설정
-
-    // 월드 매트릭스 초기화
-    m_WorldMatrix = XMMatrixIdentity();
-
-    // 뷰 매트릭스 초기화
-    m_Eye = XMVectorSet(0.0f, 300.0f, -500.0f, 0.0f);
-    m_At = XMVectorSet(0.0f, 0.0f, 0.1f, 0.0f);
-    m_Up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
-
-    m_ViewMatrix = XMMatrixLookToLH(m_Eye, m_At, m_Up);
-
-    // 프로젝션 매트릭스 초기화
-    m_ProjectionMatrix = XMMatrixPerspectiveFovLH(XM_PIDIV4, m_ClientWidth / (FLOAT)m_ClientHeight, 0.01f, 20000.0f);
-
-    // 8. FBX Loading
+    // FBX Loading
     // FBX 파일 경로 지정, 파일 이름 분리
     std::string box = "../Resource/FBXLoad_Test/fbx/box.fbx";
     std::string charcter = "../Resource/FBXLoad_Test/fbx/Character.fbx";
@@ -568,7 +397,108 @@ bool DemoApp::InitScene()
     // Model 클래스로 FBX Load
     m_Model = new Model();
     m_Model->ReadFile(m_Device, filePath);
-    m_Model->SetDC(m_DeviceContext);
+
+    // 1. Render() 에서 파이프라인에 바인딩할 버텍스 버퍼 및 버퍼 정보 준비
+
+    // 2. Render() 에서 파이프라인에 바인딩할 InputLayout 생성
+    // Input Layout은 버텍스 셰이더가 입력받을 데이터의 형식을 지정한다.
+    // SemanticName , SemanticIndex , Format , InputSlot , AlignedByteOffset , InputSlotClass , InstanceDataStepRate
+
+    // 버텍스 셰이더가 문제없이 생성된 후 Input Layout 생성
+    ID3DBlob* vertexShaderBuffer = nullptr;
+    HR_T(CompileShaderFromFile(L"FBXAnimVS.hlsl", "main", "vs_4_0", &vertexShaderBuffer));
+    if (FAILED(hr))
+    {
+        MessageBoxA(m_hWnd, (char*)errorMessage->GetBufferPointer(), "Vertex Shader 오류", MB_OK);
+        SAFE_RELEASE(errorMessage);
+        return false;
+    }
+
+    D3D11_INPUT_ELEMENT_DESC layout[] =
+    {
+        {"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0},
+        { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+        {"NORMAL",    0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
+        {"TANGENT",    0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0}
+    };
+
+    HR_T(m_Device->CreateInputLayout(layout, ARRAYSIZE(layout), vertexShaderBuffer->GetBufferPointer(), vertexShaderBuffer->GetBufferSize(), &m_InputLayout));
+
+    // 3. Render() 에서 파이프라인에 바인딩할 버텍스 셰이더 생성
+    HR_T(m_Device->CreateVertexShader(vertexShaderBuffer->GetBufferPointer(), vertexShaderBuffer->GetBufferSize(), NULL, &m_VertexShader));
+    SAFE_RELEASE(vertexShaderBuffer);
+
+    // 4. Render() 에서 파이프라인에 바인딩할 인덱스 버퍼 생성
+
+    // 5. Render() 에서 파이프라인에 바인딩할 픽셀 셰이더 생성
+    ID3DBlob* pixelShaderBuffer = nullptr;
+    HR_T(CompileShaderFromFile(L"FBXAnimPS.hlsl", "main", "ps_4_0", &pixelShaderBuffer));
+    if (FAILED(hr))
+    {
+        MessageBoxA(m_hWnd, (char*)errorMessage->GetBufferPointer(), "Pixel Shader 생성 오류", MB_OK);
+        SAFE_RELEASE(errorMessage);
+        return false;
+    }
+    HR_T(m_Device->CreatePixelShader(pixelShaderBuffer->GetBufferPointer(), pixelShaderBuffer->GetBufferSize(), NULL, &m_PixelShader));
+    SAFE_RELEASE(pixelShaderBuffer);
+
+    // 6. Render() 에서 파이프라인에 바인딩할 상수 버퍼 생성
+    D3D11_BUFFER_DESC bd = {};
+    bd.Usage = D3D11_USAGE_DEFAULT;
+    bd.ByteWidth = sizeof(CB_Transform);
+    bd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+    bd.CPUAccessFlags = 0;
+    HR_T(m_Device->CreateBuffer(&bd, nullptr, &m_Model->m_CBTransform));
+
+    bd.Usage = D3D11_USAGE_DEFAULT;
+    bd.ByteWidth = sizeof(CB_DirectionalLight);
+    bd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+    bd.CPUAccessFlags = 0;
+    HR_T(m_Device->CreateBuffer(&bd, nullptr, &m_CBDirectionalLight));
+
+    bd.Usage = D3D11_USAGE_DEFAULT;
+    bd.ByteWidth = sizeof(CB_Material);
+    bd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+    bd.CPUAccessFlags = 0;
+    HR_T(m_Device->CreateBuffer(&bd, nullptr, &m_Model->m_CBMaterial));
+
+    // Sample state 생성
+    D3D11_SAMPLER_DESC sampDesc = {};
+    sampDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+    sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+    sampDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+    sampDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+    sampDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
+    sampDesc.MinLOD = 0;
+    sampDesc.MaxLOD = D3D11_FLOAT32_MAX;
+    HR_T(m_Device->CreateSamplerState(&sampDesc, &m_SamplerLinear));
+
+    // 7. 쉐이더에 전달할 데이터 설정
+
+    // 뷰 매트릭스 초기화
+    m_Eye = XMVectorSet(0.0f, 300.0f, -500.0f, 0.0f);
+    m_At = XMVectorSet(0.0f, 0.0f, 0.1f, 0.0f);
+    m_Up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
+
+    m_ViewMatrix = XMMatrixLookToLH(m_Eye, m_At, m_Up);
+
+    // 프로젝션 매트릭스 초기화
+    m_ProjectionMatrix = XMMatrixPerspectiveFovLH(XM_PIDIV4, m_ClientWidth / (FLOAT)m_ClientHeight, 0.01f, 20000.0f);
+
+    // 7. 투명 처리를 위한 블렌드 상태 생성
+    D3D11_BLEND_DESC blendDesc = {};
+    blendDesc.AlphaToCoverageEnable = false;
+    blendDesc.IndependentBlendEnable = false;
+    blendDesc.RenderTarget[0].BlendEnable = true;
+    blendDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
+    blendDesc.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
+    blendDesc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
+    blendDesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
+    blendDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ONE;
+    blendDesc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+    blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+
+    HR_T(m_Device->CreateBlendState(&blendDesc, &m_Model->m_AlphaBlendState));
 
     return true;
 }
@@ -578,11 +508,8 @@ void DemoApp::UnInitScene()
     m_Meshes.clear();
     m_Materials.clear();
 
-    SAFE_RELEASE(m_CBTransform);
     SAFE_RELEASE(m_CBDirectionalLight);
-    SAFE_RELEASE(m_CBMaterial);
 
-    SAFE_RELEASE(m_AlphaBlendState);
     SAFE_RELEASE(m_VertexShader);
     SAFE_RELEASE(m_PixelShader);
     SAFE_RELEASE(m_InputLayout);

@@ -1,9 +1,11 @@
 #pragma once
 #include <wchar.h>
 #include <d3d11.h>
+#include <DirectXMath.h>
 #include <exception>
 #include <stdio.h>
 #include <string>
+#include <assimp/matrix4x4.h>
 
 #define LOG_ERROR(...) \
 { \
@@ -110,3 +112,7 @@ inline std::wstring ToWString(const std::string& s)
 	std::wstring wsTmp(s.begin(), s.end());
 	return wsTmp;
 }
+
+DirectX::XMFLOAT4X4 ConvertXMMATRIXToXMFLOAT4X4(const DirectX::XMMATRIX& xmMatrix);
+aiMatrix4x4 ConvertXMMATRIXToaiMatrix4x4(const DirectX::XMMATRIX& xmMatrix);
+DirectX::XMMATRIX ConvertaiMatrixToXMMATRIX(const aiMatrix4x4& aiMatrix);

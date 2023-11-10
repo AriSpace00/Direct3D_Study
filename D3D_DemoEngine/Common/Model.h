@@ -9,6 +9,33 @@
 #include "Material.h"
 #include "Animation.h"
 
+struct CB_Transform
+{
+    Matrix WorldMatrix;
+    Matrix ViewMatrix;
+    Matrix ProjectionMatrix;
+};
+
+struct CB_Material
+{
+    Vector4 Ambient = { 1.0f,1.0f,1.0f,1.0f };
+    Vector4 Diffuse = { 1.0f,1.0f,1.0f,1.0f };
+    Vector4 Specular = { 1.0f,1.0f,1.0f,1.0f };
+    Vector4 Emissive = { 1.0f,1.0f,1.0f,1.0f };
+    float SpecularPower = 80;
+    bool UseDiffuseMap = true;
+    bool MT_pad0[3];
+    bool UseNormalMap = true;
+    bool MT_pad1[3];
+    bool UseSpecularMap = true;
+    bool MT_pad2[3];
+    bool UseEmissiveMap = true;
+    bool MT_pad3[3];
+    bool UseOpacityMap = true;
+    bool MT_pad4[3];
+    Vector2 MT_pad5;
+};
+
 class Node;
 
 class Model
@@ -29,15 +56,21 @@ public:
     std::wstring m_FileName;
     bool IsFileLoad;
 
-    ID3D11DeviceContext* m_DeviceContext;
+    CB_Transform m_Transform;
+    CB_Material m_Material;
+
+    ID3D11Buffer* m_CBTransform = nullptr;                  // 상수 버퍼: 변환행렬
+    ID3D11Buffer* m_CBMaterial = nullptr;                   // 상수 버퍼: 변환행렬
+
+    ID3D11BlendState* m_AlphaBlendState = nullptr;          // 샘플러 상태
+
+    Matrix m_WorldMatrix;                                   // 월드좌표계 공간으로 변환을 위한 행렬
 
 public:
     void ReadFile(ID3D11Device* device, const std::string& path);
     void UpdateAnimation();
 
     void Update(const float& deltaTime);
-    void Render();
-
-    void SetDC(ID3D11DeviceContext* deviceContext);
+    void Render(ID3D11DeviceContext* deviceContext);
 };
 

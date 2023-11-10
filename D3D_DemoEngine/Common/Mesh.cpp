@@ -1,9 +1,7 @@
 #include "pch.h"
 #include "Mesh.h"
-
-#include <memory>
-
 #include "Helper.h"
+
 #include <assimp/scene.h>
 
 Mesh::Mesh()
@@ -91,8 +89,7 @@ void Mesh::Create(ID3D11Device* device, aiMesh* mesh, const aiMatrix4x4& nodeWor
     CreateIndexBuffer(device, m_Indices, mesh->mNumFaces * 3);
 }
 
-void Mesh::Render()
+void Mesh::Update(const float& deltaTime)
 {
-    // Node Render
-    
+
 }

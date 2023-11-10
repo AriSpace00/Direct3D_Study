@@ -11,11 +11,17 @@
 
 Model::Model()
 {
+    // 월드 매트릭스 초기화
+    m_WorldMatrix = DirectX::XMMatrixIdentity();
 }
 
 Model::~Model()
 {
     m_Importer.FreeScene();
+
+    SAFE_RELEASE(m_CBTransform);
+    SAFE_RELEASE(m_CBMaterial);
+    SAFE_RELEASE(m_AlphaBlendState);
 }
 
 void Model::ReadFile(ID3D11Device* device, const std::string& path)
@@ -106,29 +112,48 @@ void Model::Update(const float& deltaTime)
 {
     // 애니메이션을 위한 모델 업데이트
     m_Node->Update(deltaTime);
+    m_WorldMatrix = ConvertaiMatrixToXMMATRIX(m_Node->m_Nodes[0]->m_NodeWorldTM);
+}
 
-    // FBX 파일에 해당하는 Mesh 정보 Update
-    for (unsigned int i = 0; i < m_Node->m_Nodes.size(); i++)
+void Model::Render(ID3D11DeviceContext* deviceContext)
+{
+    // Mesh Render
+    deviceContext->VSSetConstantBuffers(0, 1, &m_CBTransform);
+    deviceContext->PSSetConstantBuffers(0, 1, &m_CBTransform);
+    deviceContext->PSSetConstantBuffers(2, 1, &m_CBMaterial);
+
+    m_Transform.WorldMatrix = DirectX::XMMatrixTranspose(m_WorldMatrix);
+    deviceContext->UpdateSubresource(m_CBTransform, 0, nullptr, &m_Transform, 0, 0);
+
+    // Material Render
+    for (size_t i = 0; i < m_Meshes.size(); i++)
     {
-        const aiNode* currentNode = m_Node->m_Nodes[i]->m_Node;
-        const aiMatrix4x4& worldTransform = m_Node->m_Nodes[i]->m_NodeWorldTM;
+        size_t mi = m_Meshes[i].m_MaterialIndex;
 
-        if (currentNode->mNumMeshes > 0)
+        deviceContext->PSSetShaderResources(0, 1, &m_Materials[mi].m_DiffuseRV);
+        deviceContext->PSSetShaderResources(1, 1, &m_Materials[mi].m_NormalRV);
+        deviceContext->PSSetShaderResources(2, 1, &m_Materials[mi].m_SpecularRV);
+        deviceContext->PSSetShaderResources(3, 1, &m_Materials[mi].m_EmissiveRV);
+        deviceContext->PSSetShaderResources(4, 1, &m_Materials[mi].m_OpacityRV);
+
+        m_Material.UseDiffuseMap = m_Materials[mi].m_DiffuseRV != nullptr ? true : false;
+        m_Material.UseNormalMap = m_Materials[mi].m_NormalRV != nullptr ? true : false;
+        m_Material.UseSpecularMap = m_Materials[mi].m_SpecularRV != nullptr ? true : false;
+        m_Material.UseEmissiveMap = m_Materials[mi].m_EmissiveRV != nullptr ? true : false;
+        m_Material.UseOpacityMap = m_Materials[mi].m_OpacityRV != nullptr ? true : false;
+
+        if (m_Material.UseOpacityMap)
         {
-            for (unsigned int j = 0; j < currentNode->mNumMeshes; j++)
-            {
-                m_Meshes[j].Update(m_Scene->mMeshes[j], worldTransform);
-            }
+            deviceContext->OMSetBlendState(m_AlphaBlendState, nullptr, 0xffffffff);
         }
+        else
+        {
+            deviceContext->OMSetBlendState(nullptr, nullptr, 0xffffffff);
+        }
+
+        deviceContext->UpdateSubresource(m_CBMaterial, 0, nullptr, &m_Material, 0, 0);
+        deviceContext->IASetIndexBuffer(m_Meshes[i].m_IndexBuffer, DXGI_FORMAT_R16_UINT, 0);
+        deviceContext->IASetVertexBuffers(0, 1, &m_Meshes[i].m_VertexBuffer, &m_Meshes[i].m_VertexBufferStride, &m_Meshes[i].m_VertexBufferOffset);
+        deviceContext->DrawIndexed(m_Meshes[i].m_IndexCount, 0, 0);
     }
-}
-
-void Model::Render()
-{
-    // Mesh와 Material Render
-}
-
-void Model::SetDC(ID3D11DeviceContext* deviceContext)
-{
-    m_DeviceContext = deviceContext;
 }
