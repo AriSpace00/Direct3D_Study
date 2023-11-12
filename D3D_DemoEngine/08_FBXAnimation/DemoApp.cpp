@@ -57,11 +57,12 @@ void DemoApp::Update()
     Matrix mSpin;
     Matrix mSpinX = XMMatrixRotationX(m_CubeRotationX);
     Matrix mSpinY = XMMatrixRotationY(m_CubeRotationY);
-    mSpin = mSpinX * mSpinY;
+    mSpin = mSpinY * mSpinX;
 
     // 크기 변경
-    Matrix mScale = XMMatrixScaling(m_MeshScale, m_MeshScale, m_MeshScale);
-    //m_Model->m_WorldMatrix = mScale * mSpin;
+    Matrix mScale = Matrix::CreateScale(m_MeshScale, m_MeshScale, m_MeshScale);
+    m_Model->m_WorldMatrix *= mScale;
+    m_Model->m_WorldMatrix *= mSpin;
 
     m_Light.EyePosition = m_Eye;
 }

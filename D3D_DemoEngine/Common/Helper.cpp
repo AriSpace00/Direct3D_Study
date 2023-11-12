@@ -50,35 +50,12 @@ DirectX::XMFLOAT4X4 ConvertXMMATRIXToXMFLOAT4X4(const DirectX::XMMATRIX& xmMatri
 	return result;
 }
 
-aiMatrix4x4 ConvertXMMATRIXToaiMatrix4x4(const DirectX::XMMATRIX& xmMatrix)
+DirectX::XMMATRIX ConvertaiMatrixToXMMatrix(const aiMatrix4x4& aiMatrix)
 {
-	DirectX::XMFLOAT4X4 float4x4 = ConvertXMMATRIXToXMFLOAT4X4(xmMatrix);
-	aiMatrix4x4 aiMatrix;
-	aiMatrix.a1 = float4x4._11;
-	aiMatrix.a2 = float4x4._12;
-	aiMatrix.a3 = float4x4._13;
-	aiMatrix.a4 = float4x4._14;
-	aiMatrix.b1 = float4x4._21;
-	aiMatrix.b2 = float4x4._22;
-	aiMatrix.b3 = float4x4._23;
-	aiMatrix.b4 = float4x4._24;
-	aiMatrix.c1 = float4x4._31;
-	aiMatrix.c2 = float4x4._32;
-	aiMatrix.c3 = float4x4._33;
-	aiMatrix.c4 = float4x4._34;
-	aiMatrix.d1 = float4x4._41;
-	aiMatrix.d2 = float4x4._42;
-	aiMatrix.d3 = float4x4._43;
-	aiMatrix.d4 = float4x4._44;
-	return aiMatrix;
-}
-
-DirectX::XMMATRIX ConvertaiMatrixToXMMATRIX(const aiMatrix4x4& aiMatrix)
-{
-	return DirectX::XMMATRIX(
-		aiMatrix.a1, aiMatrix.a2, aiMatrix.a3, aiMatrix.a4,
-		aiMatrix.b1, aiMatrix.b2, aiMatrix.b3, aiMatrix.b4,
-		aiMatrix.c1, aiMatrix.c2, aiMatrix.c3, aiMatrix.c4,
-		aiMatrix.d1, aiMatrix.d2, aiMatrix.d3, aiMatrix.d4
-	);
+	DirectX::XMMATRIX xmMatrix;
+	xmMatrix.r[0] = DirectX::XMVectorSet(aiMatrix.a1, aiMatrix.b1, aiMatrix.c1, aiMatrix.d1);
+	xmMatrix.r[1] = DirectX::XMVectorSet(aiMatrix.a2, aiMatrix.b2, aiMatrix.c2, aiMatrix.d2);
+	xmMatrix.r[2] = DirectX::XMVectorSet(aiMatrix.a3, aiMatrix.b3, aiMatrix.c3, aiMatrix.d3);
+	xmMatrix.r[3] = DirectX::XMVectorSet(aiMatrix.a4, aiMatrix.b4, aiMatrix.c4, aiMatrix.d4);
+	return xmMatrix;
 }

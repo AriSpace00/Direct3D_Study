@@ -114,5 +114,4 @@ inline std::wstring ToWString(const std::string& s)
 }
 
 DirectX::XMFLOAT4X4 ConvertXMMATRIXToXMFLOAT4X4(const DirectX::XMMATRIX& xmMatrix);
-aiMatrix4x4 ConvertXMMATRIXToaiMatrix4x4(const DirectX::XMMATRIX& xmMatrix);
-DirectX::XMMATRIX ConvertaiMatrixToXMMATRIX(const aiMatrix4x4& aiMatrix);
+DirectX::XMMATRIX ConvertaiMatrixToXMMatrix(const aiMatrix4x4& aiMatrix);
