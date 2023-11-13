@@ -51,24 +51,21 @@ void Model::ReadFile(ID3D11Device* device, const std::string& path)
     }
 
     // Node 정보 Create
-    
+    m_Meshes.resize(scene->mNumMeshes);
     if (scene->mRootNode != nullptr)
     {
         Node* m_RootNode = new Node();
         m_RootNode->SetScene(scene);
-        m_RootNode->Create(scene->mRootNode, this);
-
-        m_RootNode->m_NodeWorldTM;
-        m_RootNode->m_Childrens[0].m_NodeWorldTM;
+        m_RootNode->Create(device, this, scene->mRootNode);
     }
-  
+
     // Mesh 정보 Create
-    m_Meshes.resize(scene->mNumMeshes);
+    /*m_Meshes.resize(scene->mNumMeshes);
     for (unsigned int i = 0; i < scene->mNumMeshes; ++i)
     {
         m_Meshes[i].Create(device, scene->mMeshes[i]);
-    }
-    
+    }*/
+
     // Material 정보 Create
     m_Materials.resize(scene->mNumMaterials);
     for (unsigned int i = 0; i < scene->mNumMaterials; ++i)
@@ -90,21 +87,23 @@ void Model::UpdateAnimation()
 void Model::Update(const float& deltaTime)
 {
     // 애니메이션을 위한 모델 업데이트
-    
-    //m_WorldMatrix = m_Nodes[0]->m_NodeWorldTM;
+    for (int i = 0; i < m_Meshes.size(); i++)
+    {
+        m_Meshes[i].m_NodeWorldTM = m_Nodes[i]->m_NodeWorldTM;
+    }
+
+    m_WorldMatrix = m_Meshes[0].m_NodeWorldTM;
 }
 
 void Model::Render(ID3D11DeviceContext* deviceContext)
 {
-    m_Nodes[0]->Update(deviceContext);
-
     // Mesh Render
-    /*deviceContext->VSSetConstantBuffers(0, 1, &m_CBTransform);
-    deviceContext->PSSetConstantBuffers(0, 1, &m_CBTransform);*/
+    deviceContext->VSSetConstantBuffers(0, 1, &m_CBTransform);
+    deviceContext->PSSetConstantBuffers(0, 1, &m_CBTransform);
     deviceContext->PSSetConstantBuffers(2, 1, &m_CBMaterial);
 
-    /*m_Transform.WorldMatrix = DirectX::XMMatrixTranspose(m_WorldMatrix);
-    deviceContext->UpdateSubresource(m_CBTransform, 0, nullptr, &m_Transform, 0, 0);*/
+    m_Transform.WorldMatrix = DirectX::XMMatrixTranspose(m_WorldMatrix);
+    deviceContext->UpdateSubresource(m_CBTransform, 0, nullptr, &m_Transform, 0, 0);
 
     // Material Render
     for (size_t i = 0; i < m_Meshes.size(); i++)

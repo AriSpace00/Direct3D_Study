@@ -2,6 +2,7 @@
 #include "Node.h"
 #include "Helper.h"
 #include "Model.h"
+#include "Mesh.h"
 
 Node::Node()
     : m_NodeAnimPtr(nullptr)
@@ -12,16 +13,9 @@ Node::~Node()
 {
 }
 
-void Node::Update(ID3D11DeviceContext* deviceContext)
+void Node::Update(const float& deltaTime, Model* model, const aiNode* rootNode)
 {
-    deviceContext->UpdateSubresource(m_WorldTMBuffer, 0, nullptr, &m_NodeWorldTM, 0, 0);
-    deviceContext->VSSetConstantBuffers(0, 1, &m_WorldTMBuffer);
-    deviceContext->PSSetConstantBuffers(0, 1, &m_WorldTMBuffer);
-
-    for (int i = 0; i < m_Childrens.size(); i++)
-    {
-        m_Childrens[i].Update(deviceContext);
-    }
+    
 }
 
 void Node::Render(ID3D11DeviceContext* deviceContext)
@@ -69,12 +63,10 @@ void Node::SetScene(const aiScene* scene)
     m_Scene = scene;
 }
 
-void Node::Create(const aiNode* node, Model* model)
+void Node::Create(ID3D11Device* device, Model* model, const aiNode* node)
 {
-    model->m_Nodes.push_back(this);
-
+    m_Node = node;
     m_NodeName = node->mName.C_Str();
-
     m_NodeLocalTM = ConvertaiMatrixToXMMatrix(node->mTransformation);
 
     if (node->mParent != nullptr)
@@ -85,13 +77,21 @@ void Node::Create(const aiNode* node, Model* model)
     {
         m_NodeWorldTM = m_NodeLocalTM;
     }
+    model->m_Nodes.push_back(this);
+
+    for (int i = 0; i < node->mNumMeshes; i++)
+    {
+        aiMesh* mesh = m_Scene->mMeshes[node->mMeshes[i]];
+        model->m_Meshes[i].Create(device, mesh);
+    }
 
     if (node->mNumChildren > 0)
     {
         m_Childrens.resize(node->mNumChildren);
         for (int i = 0; i < node->mNumChildren; i++)
         {
-            Create(node->mChildren[i], model);
+            Create(device, model, node->mChildren[i]);
         }
     }
+    model->m_Meshes;
 }

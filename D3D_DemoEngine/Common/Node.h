@@ -29,6 +29,7 @@ public:
 
 public:
     const aiScene* m_Scene;
+    const aiNode* m_Node;
 
     string m_NodeName;
     string m_ParentNodeName;
@@ -40,15 +41,13 @@ public:
 
     vector<Node> m_Childrens;
 
-    ID3D11Buffer* m_WorldTMBuffer;
-
 public:
     void SetScene(const aiScene* scene);
-    void Create(const aiNode* node, Model* model);
+    void Create(ID3D11Device* device, Model* model, const aiNode* node);
 
     // 애니메이션 업데이트
-    void Update(ID3D11DeviceContext* deviceContext);
-    void Render(ID3D11DeviceContext* device);
+    void Update(const float& deltaTime, Model* model, const aiNode* rootNode);
+    void Render(ID3D11DeviceContext* deviceContext);
 
 private:
     Matrix GetParentWorldTransform(const aiNode* parentNode);

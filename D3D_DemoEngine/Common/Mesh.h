@@ -44,6 +44,8 @@ public:
     vector<Vertex> m_Vertices;
     vector<WORD> m_Indices;
 
+    Matrix m_NodeWorldTM;
+
 private:
     // aiMesh로부터 불러온 정보로 Create 함수를 진행하기 위한 내부함수
     // 버텍스 버퍼 생성
