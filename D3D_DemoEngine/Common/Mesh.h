@@ -34,7 +34,6 @@ public:
 public:
     ID3D11Buffer* m_VertexBuffer;     
     ID3D11Buffer* m_IndexBuffer;
-    ID3D11Buffer* m_TransformBuffer;
                                        
     UINT m_VertexBufferStride = 0;    // 버텍스 하나의 크기
     UINT m_VertexBufferOffset = 0;    // 버텍스 버퍼의 오프셋
@@ -53,7 +52,6 @@ private:
     void CreateVertexBuffer(ID3D11Device* device, const vector<Vertex>& vertices, UINT vertexCount);
     // 인덱스 버퍼 생성
     void CreateIndexBuffer(ID3D11Device* device, const vector<WORD>& indices, UINT indexCount);
-    void CreateTransformBuffer(ID3D11Device* device);
 
 public:
     // aiMesh로부터 불러온 정보로 버텍스 버퍼 & 인덱스 버퍼 생성

@@ -50,16 +50,6 @@ void Mesh::CreateIndexBuffer(ID3D11Device* device, const vector<WORD>& indices, 
     m_IndexCount = indexCount;
 }
 
-void Mesh::CreateTransformBuffer(ID3D11Device* device)
-{
-    D3D11_BUFFER_DESC bd = {};
-    bd.Usage = D3D11_USAGE_DEFAULT;
-    bd.ByteWidth = sizeof(m_NodeWorldTM);
-    bd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-    bd.CPUAccessFlags = 0;
-    HR_T(device->CreateBuffer(&bd, nullptr, &m_TransformBuffer)); 
-}
-
 void Mesh::Create(ID3D11Device* device, aiMesh* mesh)
 {
     m_MaterialIndex = mesh->mMaterialIndex;
@@ -86,9 +76,6 @@ void Mesh::Create(ID3D11Device* device, aiMesh* mesh)
         m_Indices[i * 3 + 2] = mesh->mFaces[i].mIndices[2];
     }
     CreateIndexBuffer(device, m_Indices, mesh->mNumFaces * 3);
-
-    // 트랜스폼 정보 생성
-    CreateTransformBuffer(device);
 }
 
 
