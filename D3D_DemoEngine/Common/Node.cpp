@@ -38,19 +38,19 @@ Matrix Node::GetParentWorldTransform(const aiNode* parentNode)
     }
 }
 
-void Node::FindNodeAnimation(const aiNode* node)
+void Node::FindNodeAnimation(const aiScene* scene, const aiNode* node)
 {
-    if (m_Scene->mNumAnimations > 0)
+    if (scene->mNumAnimations > 0)
     {
-        for (int i = 0; i < m_Scene->mNumAnimations; i++)
+        for (int i = 0; i < scene->mNumAnimations; i++)
         {
-            if (m_Scene->mAnimations[i]->mNumChannels > 0)
+            if (scene->mAnimations[i]->mNumChannels > 0)
             {
-                for (int j = 0; j < m_Scene->mAnimations[i]->mNumChannels; j++)
+                for (int j = 0; j < scene->mAnimations[i]->mNumChannels; j++)
                 {
-                    if (m_NodeName == m_Scene->mAnimations[i]->mChannels[j]->mNodeName.C_Str())
+                    if (m_NodeName == scene->mAnimations[i]->mChannels[j]->mNodeName.C_Str())
                     {
-                        m_NodeAnimPtr = m_Scene->mAnimations[i]->mChannels[j];
+                        m_NodeAnimPtr = scene->mAnimations[i]->mChannels[j];
                     }
                 }
             }
@@ -58,12 +58,7 @@ void Node::FindNodeAnimation(const aiNode* node)
     }
 }
 
-void Node::SetScene(const aiScene* scene)
-{
-    m_Scene = scene;
-}
-
-void Node::Create(ID3D11Device* device, Model* model, const aiNode* node)
+void Node::Create(ID3D11Device* device, Model* model, const aiScene* scene, const aiNode* node)
 {
     m_Node = node;
     m_NodeName = node->mName.C_Str();
@@ -79,10 +74,13 @@ void Node::Create(ID3D11Device* device, Model* model, const aiNode* node)
     }
     model->m_Nodes.push_back(this);
 
+    int meshIndex = model->m_Meshes.size();
     for (int i = 0; i < node->mNumMeshes; i++)
     {
-        aiMesh* mesh = m_Scene->mMeshes[node->mMeshes[i]];
-        model->m_Meshes[i].Create(device, mesh);
+        aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
+        model->m_Meshes.push_back(Mesh());
+        model->m_Meshes[meshIndex].Create(device, mesh);
+        meshIndex++;
     }
 
     if (node->mNumChildren > 0)
@@ -90,8 +88,7 @@ void Node::Create(ID3D11Device* device, Model* model, const aiNode* node)
         m_Childrens.resize(node->mNumChildren);
         for (int i = 0; i < node->mNumChildren; i++)
         {
-            Create(device, model, node->mChildren[i]);
+            m_Childrens[i].Create(device, model, scene, node->mChildren[i]);
         }
     }
-    model->m_Meshes;
 }

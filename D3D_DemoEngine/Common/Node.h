@@ -42,8 +42,7 @@ public:
     vector<Node> m_Childrens;
 
 public:
-    void SetScene(const aiScene* scene);
-    void Create(ID3D11Device* device, Model* model, const aiNode* node);
+    void Create(ID3D11Device* device, Model* model, const aiScene* scene, const aiNode* node);
 
     // 애니메이션 업데이트
     void Update(const float& deltaTime, Model* model, const aiNode* rootNode);
@@ -51,6 +50,6 @@ public:
 
 private:
     Matrix GetParentWorldTransform(const aiNode* parentNode);
-    void FindNodeAnimation(const aiNode* node);
+    void FindNodeAnimation(const aiScene* scene, const aiNode* node);
 };
 

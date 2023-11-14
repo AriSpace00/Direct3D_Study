@@ -10,9 +10,10 @@
 #include "Helper.h"
 
 Model::Model()
+    : m_Position(DirectX::XMMatrixIdentity())
+    , m_Rotation(DirectX::XMMatrixIdentity())
+    , m_Scale(DirectX::XMMatrixIdentity())
 {
-    // 월드 매트릭스 초기화
-    m_WorldMatrix = DirectX::XMMatrixIdentity();
 }
 
 Model::~Model()
@@ -51,20 +52,11 @@ void Model::ReadFile(ID3D11Device* device, const std::string& path)
     }
 
     // Node 정보 Create
-    m_Meshes.resize(scene->mNumMeshes);
     if (scene->mRootNode != nullptr)
     {
         Node* m_RootNode = new Node();
-        m_RootNode->SetScene(scene);
-        m_RootNode->Create(device, this, scene->mRootNode);
+        m_RootNode->Create(device, this, scene, scene->mRootNode);
     }
-
-    // Mesh 정보 Create
-    /*m_Meshes.resize(scene->mNumMeshes);
-    for (unsigned int i = 0; i < scene->mNumMeshes; ++i)
-    {
-        m_Meshes[i].Create(device, scene->mMeshes[i]);
-    }*/
 
     // Material 정보 Create
     m_Materials.resize(scene->mNumMaterials);
@@ -86,24 +78,34 @@ void Model::UpdateAnimation()
 
 void Model::Update(const float& deltaTime)
 {
-    // 애니메이션을 위한 모델 업데이트
+    // 노드의 WorldTM을 Mesh의 WorldTM에 업데이트
     for (int i = 0; i < m_Meshes.size(); i++)
     {
         m_Meshes[i].m_NodeWorldTM = m_Nodes[i]->m_NodeWorldTM;
-    }
 
-    m_WorldMatrix = m_Meshes[0].m_NodeWorldTM;
+        m_Meshes[i].m_NodeWorldTM *= m_Scale;
+        m_Meshes[i].m_NodeWorldTM *= m_Rotation;
+        m_Meshes[i].m_NodeWorldTM *= m_Position;
+    }
 }
 
 void Model::Render(ID3D11DeviceContext* deviceContext)
 {
     // Mesh Render
-    deviceContext->VSSetConstantBuffers(0, 1, &m_CBTransform);
-    deviceContext->PSSetConstantBuffers(0, 1, &m_CBTransform);
-    deviceContext->PSSetConstantBuffers(2, 1, &m_CBMaterial);
+    for (size_t i = 0; i < m_Meshes.size(); i++)
+    {
+        m_Transform.WorldMatrix = XMMatrixTranspose(m_Meshes[i].m_NodeWorldTM);
+        deviceContext->UpdateSubresource(m_CBTransform, 0, nullptr, &m_Transform, 0, 0);
+        deviceContext->VSSetConstantBuffers(0, 1, &m_CBTransform);
+        deviceContext->PSSetConstantBuffers(0, 1, &m_CBTransform);
 
-    m_Transform.WorldMatrix = DirectX::XMMatrixTranspose(m_WorldMatrix);
-    deviceContext->UpdateSubresource(m_CBTransform, 0, nullptr, &m_Transform, 0, 0);
+        deviceContext->IASetVertexBuffers(0, 1, &m_Meshes[i].m_VertexBuffer, &m_Meshes[i].m_VertexBufferStride, &m_Meshes[i].m_VertexBufferOffset);
+        deviceContext->IASetIndexBuffer(m_Meshes[i].m_IndexBuffer, DXGI_FORMAT_R16_UINT, 0);
+
+        deviceContext->DrawIndexed(m_Meshes[i].m_IndexCount, 0, 0);
+    }
+
+    deviceContext->PSSetConstantBuffers(2, 1, &m_CBMaterial);
 
     // Material Render
     for (size_t i = 0; i < m_Meshes.size(); i++)
@@ -130,10 +132,13 @@ void Model::Render(ID3D11DeviceContext* deviceContext)
         {
             deviceContext->OMSetBlendState(nullptr, nullptr, 0xffffffff);
         }
-
         deviceContext->UpdateSubresource(m_CBMaterial, 0, nullptr, &m_Material, 0, 0);
-        deviceContext->IASetIndexBuffer(m_Meshes[i].m_IndexBuffer, DXGI_FORMAT_R16_UINT, 0);
-        deviceContext->IASetVertexBuffers(0, 1, &m_Meshes[i].m_VertexBuffer, &m_Meshes[i].m_VertexBufferStride, &m_Meshes[i].m_VertexBufferOffset);
-        deviceContext->DrawIndexed(m_Meshes[i].m_IndexCount, 0, 0);
     }
+}
+
+void Model::SetTransform(Matrix position, Matrix rotation, Matrix scale)
+{
+    m_Position = position;
+    m_Rotation = rotation;
+    m_Scale = scale;
 }

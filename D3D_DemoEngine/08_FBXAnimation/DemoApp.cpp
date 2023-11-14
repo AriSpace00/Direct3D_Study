@@ -49,20 +49,17 @@ void DemoApp::Update()
 {
     __super::Update();
 
-    float t = GameTimer::m_Instance->TotalTime();
     float deltaTime = GameTimer::m_Instance->DeltaTime();
     m_Model->Update(deltaTime);
 
-    // y축을 기준으로 큐브 회전
     Matrix mSpin;
     Matrix mSpinX = XMMatrixRotationX(m_CubeRotationX);
     Matrix mSpinY = XMMatrixRotationY(m_CubeRotationY);
     mSpin = mSpinY * mSpinX;
 
-    // 크기 변경
     Matrix mScale = Matrix::CreateScale(m_MeshScale, m_MeshScale, m_MeshScale);
-    m_Model->m_WorldMatrix *= mScale;
-    m_Model->m_WorldMatrix *= mSpin;
+
+    m_Model->SetTransform(DirectX::XMMatrixIdentity(), mSpin, mScale);
 
     m_Light.EyePosition = m_Eye;
 }
@@ -84,16 +81,22 @@ void DemoApp::Render()
     
     m_DeviceContext->PSSetSamplers(0, 1, &m_SamplerLinear);
 
-    // Cube, Lighting matrix 를 m_Transform 에 설정
+    // ViewMatrix, ProjectionMatrix 설정
     m_Model->m_Transform.ViewMatrix = XMMatrixTranspose(m_ViewMatrix);
     m_Model->m_Transform.ProjectionMatrix = XMMatrixTranspose(m_ProjectionMatrix);
 
+    m_DeviceContext->UpdateSubresource(m_Model->m_CBTransform, 0, nullptr, &m_Model->m_Transform, 0, 0);
+    m_DeviceContext->VSSetConstantBuffers(0, 1, &m_Model->m_CBTransform);
+    m_DeviceContext->PSSetConstantBuffers(0, 1, &m_Model->m_CBTransform);
+
+    // Light 설정
     m_Light.Direction.Normalize();
     m_DeviceContext->UpdateSubresource(m_CBDirectionalLight, 0, nullptr, &m_Light, 0, 0);
 
     // Model Render
     m_Model->Render(m_DeviceContext);
 
+    
     // ImGui
     {
         ImGuiIO& io = ImGui::GetIO(); (void)io;

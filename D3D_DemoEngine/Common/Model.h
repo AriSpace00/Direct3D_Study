@@ -51,9 +51,6 @@ public:
     std::vector<Material> m_Materials;
     std::vector<Animation> m_Animations;
 
-    //const aiScene* m_Scene;
-    //Assimp::Importer m_Importer;
-
     std::wstring m_FileName;
     bool IsFileLoad;
 
@@ -65,7 +62,9 @@ public:
 
     ID3D11BlendState* m_AlphaBlendState = nullptr;          // 샘플러 상태
 
-    Matrix m_WorldMatrix;                                   // 월드좌표계 공간으로 변환을 위한 행렬
+    Matrix m_Position;
+    Matrix m_Rotation;
+    Matrix m_Scale;
 
 public:
     void ReadFile(ID3D11Device* device, const std::string& path);
@@ -73,5 +72,7 @@ public:
 
     void Update(const float& deltaTime);
     void Render(ID3D11DeviceContext* deviceContext);
+
+    void SetTransform(Matrix position, Matrix rotation, Matrix scale);
 };
 
