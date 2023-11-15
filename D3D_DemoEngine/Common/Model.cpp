@@ -87,40 +87,41 @@ void Model::Update(const float& deltaTime)
 
 void Model::Render(ID3D11DeviceContext* deviceContext)
 {
+    deviceContext->PSSetConstantBuffers(2, 1, &m_CBMaterial);
+
     // Mesh Render
     for (int i = 0; i < m_Nodes.size(); i++)
     {
+        // Material Render
+        for (size_t j = 0; j < m_Nodes[i]->m_Meshes.size(); j++)
+        {
+            size_t mi = m_Nodes[i]->m_Meshes[j].m_MaterialIndex;
+
+            deviceContext->PSSetShaderResources(0, 1, &m_Materials[mi].m_DiffuseRV);
+            deviceContext->PSSetShaderResources(1, 1, &m_Materials[mi].m_NormalRV);
+            deviceContext->PSSetShaderResources(2, 1, &m_Materials[mi].m_SpecularRV);
+            deviceContext->PSSetShaderResources(3, 1, &m_Materials[mi].m_EmissiveRV);
+            deviceContext->PSSetShaderResources(4, 1, &m_Materials[mi].m_OpacityRV);
+
+            m_Material.UseDiffuseMap = m_Materials[mi].m_DiffuseRV != nullptr ? true : false;
+            m_Material.UseNormalMap = m_Materials[mi].m_NormalRV != nullptr ? true : false;
+            m_Material.UseSpecularMap = m_Materials[mi].m_SpecularRV != nullptr ? true : false;
+            m_Material.UseEmissiveMap = m_Materials[mi].m_EmissiveRV != nullptr ? true : false;
+            m_Material.UseOpacityMap = m_Materials[mi].m_OpacityRV != nullptr ? true : false;
+
+            if (m_Material.UseOpacityMap)
+            {
+                deviceContext->OMSetBlendState(m_AlphaBlendState, nullptr, 0xffffffff);
+            }
+            else
+            {
+                deviceContext->OMSetBlendState(nullptr, nullptr, 0xffffffff);
+            }
+            deviceContext->UpdateSubresource(m_CBMaterial, 0, nullptr, &m_Material, 0, 0);
+            
+        }
+
         m_Nodes[i]->Render(deviceContext, this);
-    }
-
-    deviceContext->PSSetConstantBuffers(2, 1, &m_CBMaterial);
-
-    // Material Render
-    for (size_t i = 0; i < m_Meshes.size(); i++)
-    {
-        size_t mi = m_Meshes[i].m_MaterialIndex;
-
-        deviceContext->PSSetShaderResources(0, 1, &m_Materials[mi].m_DiffuseRV);
-        deviceContext->PSSetShaderResources(1, 1, &m_Materials[mi].m_NormalRV);
-        deviceContext->PSSetShaderResources(2, 1, &m_Materials[mi].m_SpecularRV);
-        deviceContext->PSSetShaderResources(3, 1, &m_Materials[mi].m_EmissiveRV);
-        deviceContext->PSSetShaderResources(4, 1, &m_Materials[mi].m_OpacityRV);
-
-        m_Material.UseDiffuseMap = m_Materials[mi].m_DiffuseRV != nullptr ? true : false;
-        m_Material.UseNormalMap = m_Materials[mi].m_NormalRV != nullptr ? true : false;
-        m_Material.UseSpecularMap = m_Materials[mi].m_SpecularRV != nullptr ? true : false;
-        m_Material.UseEmissiveMap = m_Materials[mi].m_EmissiveRV != nullptr ? true : false;
-        m_Material.UseOpacityMap = m_Materials[mi].m_OpacityRV != nullptr ? true : false;
-
-        if (m_Material.UseOpacityMap)
-        {
-            deviceContext->OMSetBlendState(m_AlphaBlendState, nullptr, 0xffffffff);
-        }
-        else
-        {
-            deviceContext->OMSetBlendState(nullptr, nullptr, 0xffffffff);
-        }
-        deviceContext->UpdateSubresource(m_CBMaterial, 0, nullptr, &m_Material, 0, 0);
     }
 }
 

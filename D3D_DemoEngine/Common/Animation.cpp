@@ -30,16 +30,25 @@ void Animation::Create(const aiNodeAnim* nodeAnim)
             m_AnimationKeys[i]->Rotation = ToXMFLOAT4(nodeAnim->mRotationKeys[i].mValue);
 
             // 스케일 키프레임 정보
-            m_AnimationKeys[i]->Scaling = ToXMFLOAT3(nodeAnim->mScalingKeys[i].mValue);
+            m_AnimationKeys[i]->Scale = ToXMFLOAT3(nodeAnim->mScalingKeys[i].mValue);
         }
     }
 }
 
 void Animation::Evaluate(const float& progressTime)
 {
-    
+    int nextKeyIndex = (m_CurKeyIndex + 1) % m_AnimationKeys.size();
 
+    const AnimationKey* curKey = m_AnimationKeys[m_CurKeyIndex];
+    const AnimationKey* nextKey = m_AnimationKeys[nextKeyIndex];
 
+    Vector3 interpolationPosition = Vector3::Lerp(curKey->Position, nextKey->Position, progressTime);
+    Vector4 interpolationRotation = Quaternion::Lerp(curKey->Rotation, nextKey->Rotation, progressTime);
+    Vector3 interpolationScale = Vector3::Lerp(curKey->Scale, nextKey->Scale, progressTime);
+
+    Matrix interpolationTM = Matrix::CreateScale(interpolationScale) * Matrix::CreateFromQuaternion(interpolationRotation) * Matrix::CreateTranslation(interpolationPosition);
+
+    m_InterpolationTM = interpolationTM;
 }
 
 void Animation::Update(const float& deltaTime)

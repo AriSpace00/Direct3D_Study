@@ -76,7 +76,7 @@ public:
 
     std::wstring m_FBXFileName;
 
-    int m_FBXModelIndex = 7;
+    int m_FBXModelIndex = 0;
 
 public:
     virtual bool Initialize(UINT width, UINT height);

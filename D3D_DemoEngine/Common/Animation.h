@@ -16,7 +16,7 @@ struct AnimationKey
     float Time = 0.0f;
     Vector3 Position;
     Quaternion Rotation;
-    Vector3 Scaling;
+    Vector3 Scale;
 };
 
 class Animation
@@ -32,6 +32,8 @@ public:
 
     string m_NodeName;
     vector<AnimationKey*> m_AnimationKeys;
+
+    Matrix m_InterpolationTM;
 
 public:
     // 노드 애니메이션 생성

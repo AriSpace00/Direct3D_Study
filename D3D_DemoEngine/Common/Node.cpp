@@ -17,15 +17,18 @@ Node::~Node()
 void Node::Update(const float& deltaTime, Model* model)
 {
     m_Animation->Update(deltaTime);
+    /*m_Animation->Evaluate(deltaTime);
+    m_NodeLocalTM = m_Animation->m_InterpolationTM;*/
 
     if (m_Animation->m_AnimationKeys.size() > 0) 
     {
         Matrix position = Matrix::CreateTranslation(m_Animation->m_AnimationKeys[m_Animation->m_CurKeyIndex]->Position);
         Matrix rotation = Matrix::CreateFromQuaternion(m_Animation->m_AnimationKeys[m_Animation->m_CurKeyIndex]->Rotation);
-        Matrix scale = Matrix::CreateScale(m_Animation->m_AnimationKeys[m_Animation->m_CurKeyIndex]->Scaling);
+        Matrix scale = Matrix::CreateScale(m_Animation->m_AnimationKeys[m_Animation->m_CurKeyIndex]->Scale);
 
         m_NodeLocalTM = scale * rotation * position;
     }
+
 
     if (m_ParentNode != nullptr)
     {
