@@ -14,6 +14,7 @@
 #include <assimp/matrix4x4.h>
 
 #include "Animation.h"
+#include "Mesh.h"
 
 using namespace Microsoft::WRL;
 using namespace DirectX::SimpleMath;
@@ -28,28 +29,27 @@ public:
     ~Node();
 
 public:
-    const aiScene* m_Scene;
-    const aiNode* m_Node;
-
     string m_NodeName;
-    string m_ParentNodeName;
 
     Matrix m_NodeLocalTM;
     Matrix m_NodeWorldTM;
 
-    const aiNodeAnim* m_NodeAnimPtr;
+    Animation* m_Animation;
+
+    Node* m_ParentNode;
 
     vector<Node> m_Childrens;
+    vector<Mesh> m_Meshes;
 
 public:
     void Create(ID3D11Device* device, Model* model, const aiScene* scene, const aiNode* node);
 
     // 애니메이션 업데이트
-    void Update(const float& deltaTime, Model* model, const aiNode* rootNode);
-    void Render(ID3D11DeviceContext* deviceContext);
+    void Update(const float& deltaTime, Model* model);
+    void Render(ID3D11DeviceContext* deviceContext, Model* model);
 
 private:
-    Matrix GetParentWorldTransform(const aiNode* parentNode);
+    Matrix GetParentWorldTransform(const Node* parentNode);
     void FindNodeAnimation(const aiScene* scene, const aiNode* node);
 };
 

@@ -79,30 +79,18 @@ void Model::UpdateAnimation()
 void Model::Update(const float& deltaTime)
 {
     // 노드의 WorldTM을 Mesh의 WorldTM에 업데이트
-    for (int i = 0; i < m_Meshes.size(); i++)
+    for (int i = 0; i < m_Nodes.size(); i++)
     {
-        m_Meshes[i].m_NodeWorldTM = m_Nodes[i]->m_NodeWorldTM;
-
-        m_Meshes[i].m_NodeWorldTM *= m_Scale;
-        m_Meshes[i].m_NodeWorldTM *= m_Rotation;
-        m_Meshes[i].m_NodeWorldTM *= m_Position;
+        m_Nodes[i]->Update(deltaTime, this);
     }
 }
 
 void Model::Render(ID3D11DeviceContext* deviceContext)
 {
     // Mesh Render
-    for (size_t i = 0; i < m_Meshes.size(); i++)
+    for (int i = 0; i < m_Nodes.size(); i++)
     {
-        m_Transform.WorldMatrix = XMMatrixTranspose(m_Meshes[i].m_NodeWorldTM);
-        deviceContext->UpdateSubresource(m_CBTransform, 0, nullptr, &m_Transform, 0, 0);
-        deviceContext->VSSetConstantBuffers(0, 1, &m_CBTransform);
-        deviceContext->PSSetConstantBuffers(0, 1, &m_CBTransform);
-
-        deviceContext->IASetVertexBuffers(0, 1, &m_Meshes[i].m_VertexBuffer, &m_Meshes[i].m_VertexBufferStride, &m_Meshes[i].m_VertexBufferOffset);
-        deviceContext->IASetIndexBuffer(m_Meshes[i].m_IndexBuffer, DXGI_FORMAT_R16_UINT, 0);
-
-        deviceContext->DrawIndexed(m_Meshes[i].m_IndexCount, 0, 0);
+        m_Nodes[i]->Render(deviceContext, this);
     }
 
     deviceContext->PSSetConstantBuffers(2, 1, &m_CBMaterial);

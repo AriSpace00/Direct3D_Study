@@ -30,15 +30,14 @@ public:
     int m_AnimFps = 30;
     float m_Duration = 0.0f;
 
-    aiString m_NodeName;
-    const aiNodeAnim* m_NodeAnimation;
+    string m_NodeName;
     vector<AnimationKey*> m_AnimationKeys;
 
 public:
     // 노드 애니메이션 생성
     void Create(const aiNodeAnim* nodeAnim);
     // 애니메이션 키 보간
-    void Evaluate(const float& progressTime, const Vector3& position, const Quaternion& rotation, const Vector3& Scaling);
+    void Evaluate(const float& progressTime);
 
     void Update(const float& deltaTime);
 

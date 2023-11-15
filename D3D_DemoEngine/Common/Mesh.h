@@ -9,8 +9,6 @@
 #include <wrl/client.h>
 #include <directxtk/SimpleMath.h>
 
-#include "Node.h"
-
 using namespace Microsoft::WRL;
 using namespace DirectX::SimpleMath;
 using namespace std;

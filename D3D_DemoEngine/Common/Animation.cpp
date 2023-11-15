@@ -12,9 +12,7 @@ Animation::~Animation()
 
 void Animation::Create(const aiNodeAnim* nodeAnim)
 {
-    m_NodeAnimation = nodeAnim;
-    m_NodeName = nodeAnim->mNodeName;
-
+    m_NodeName = nodeAnim->mNodeName.C_Str();
     m_AnimationKeys.resize(nodeAnim->mNumPositionKeys);
 
     // 애니메이션 키가 있을 때 해당 키 값을 가져옴
@@ -33,24 +31,27 @@ void Animation::Create(const aiNodeAnim* nodeAnim)
 
             // 스케일 키프레임 정보
             m_AnimationKeys[i]->Scaling = ToXMFLOAT3(nodeAnim->mScalingKeys[i].mValue);
-
         }
     }
 }
 
-void Animation::Evaluate(const float& progressTime, const Vector3& position, const Quaternion& rotation,
-    const Vector3& Scaling)
+void Animation::Evaluate(const float& progressTime)
 {
-    // 키 보간하기
+    
+
+
 }
 
 void Animation::Update(const float& deltaTime)
 {
-    m_Duration += deltaTime;
-    if (m_Duration > m_AnimationKeys[m_CurKeyIndex]->Time / m_AnimFps)
+    if (m_AnimationKeys.size() > 0)
     {
-        m_CurKeyIndex = (m_CurKeyIndex + 1) % m_AnimationKeys.size();
-        m_Duration = 0.f;
+        m_Duration += deltaTime;
+        if (m_Duration > m_AnimationKeys[m_CurKeyIndex]->Time / m_AnimFps)
+        {
+            m_CurKeyIndex = (m_CurKeyIndex + 1) % m_AnimationKeys.size();
+            m_Duration = 0.f;
+        }
     }
 }
 

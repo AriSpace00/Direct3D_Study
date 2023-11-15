@@ -49,7 +49,7 @@ public:
     std::vector<Node*> m_Nodes;
     std::vector<Mesh> m_Meshes;
     std::vector<Material> m_Materials;
-    std::vector<Animation> m_Animations;
+    std::vector<Animation*> m_Animations;
 
     std::wstring m_FileName;
     bool IsFileLoad;
