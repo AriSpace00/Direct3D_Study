@@ -351,6 +351,7 @@ bool DemoApp::InitScene()
     std::string tree = "../Resource/FBXLoad_Test/fbx/Tree.fbx";
     std::string zelda = "../Resource/FBXLoad_Test/fbx/zeldaPosed001.fbx";
     std::string boneDummy = "../Resource/FBXLoad_Test/fbx/BoneDummy_Modify_WalkAnim.fbx";
+    std::string materialTest = "../Resource/FBXLoad_Test/fbx/MaterialTest.fbx";
 
     std::string filePath;
 
@@ -394,6 +395,11 @@ bool DemoApp::InitScene()
     case 7:
     {
         filePath = boneDummy;
+        break;
+    }
+    case 8:
+    {
+        filePath = materialTest;
         break;
     }
     }

@@ -66,6 +66,8 @@ public:
     Matrix m_Rotation;
     Matrix m_Scale;
 
+    bool m_IsEvaluate;
+
 public:
     void ReadFile(ID3D11Device* device, const std::string& path);
     void UpdateAnimation();

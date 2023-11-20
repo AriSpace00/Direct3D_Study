@@ -13,6 +13,7 @@ Model::Model()
     : m_Position(DirectX::XMMatrixIdentity())
     , m_Rotation(DirectX::XMMatrixIdentity())
     , m_Scale(DirectX::XMMatrixIdentity())
+    , m_IsEvaluate(true)
 {
 }
 

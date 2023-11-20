@@ -35,16 +35,19 @@ void Animation::Create(const aiNodeAnim* nodeAnim)
     }
 }
 
-void Animation::Evaluate(const float& progressTime)
+void Animation::Evaluate()
 {
     int nextKeyIndex = (m_CurKeyIndex + 1) % m_AnimationKeys.size();
 
     const AnimationKey* curKey = m_AnimationKeys[m_CurKeyIndex];
     const AnimationKey* nextKey = m_AnimationKeys[nextKeyIndex];
 
-    Vector3 interpolationPosition = Vector3::Lerp(curKey->Position, nextKey->Position, progressTime);
-    Vector4 interpolationRotation = Quaternion::Lerp(curKey->Rotation, nextKey->Rotation, progressTime);
-    Vector3 interpolationScale = Vector3::Lerp(curKey->Scale, nextKey->Scale, progressTime);
+    float interval = (curKey->Time - nextKey->Time) / m_AnimFps;
+    float ratio = (m_Duration - curKey->Time / m_AnimFps) / interval;
+
+    Vector3 interpolationPosition = Vector3::Lerp(curKey->Position, nextKey->Position, ratio);
+    Vector4 interpolationRotation = Quaternion::Slerp(curKey->Rotation, nextKey->Rotation, ratio);
+    Vector3 interpolationScale = Vector3::Lerp(curKey->Scale, nextKey->Scale, ratio);
 
     Matrix interpolationTM = Matrix::CreateScale(interpolationScale) * Matrix::CreateFromQuaternion(interpolationRotation) * Matrix::CreateTranslation(interpolationPosition);
 
@@ -53,13 +56,20 @@ void Animation::Evaluate(const float& progressTime)
 
 void Animation::Update(const float& deltaTime)
 {
+    m_Duration += deltaTime;
+
     if (m_AnimationKeys.size() > 0)
     {
-        m_Duration += deltaTime;
-        if (m_Duration > m_AnimationKeys[m_CurKeyIndex]->Time / m_AnimFps)
+        m_NextKeyIndex = (m_CurKeyIndex + 1) % m_AnimationKeys.size();
+
+        if (m_Duration > m_AnimationKeys[m_NextKeyIndex]->Time / m_AnimFps)
         {
-            m_CurKeyIndex = (m_CurKeyIndex + 1) % m_AnimationKeys.size();
-            m_Duration = 0.f;
+            m_CurKeyIndex = m_NextKeyIndex;
+
+            if(m_CurKeyIndex == 0)
+            {
+                m_Duration = 0.f;
+            }
         }
     }
 }

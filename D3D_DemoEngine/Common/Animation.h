@@ -27,6 +27,7 @@ public:
 
 public:
     int m_CurKeyIndex = 0;
+    int m_NextKeyIndex = 0;
     int m_AnimFps = 30;
     float m_Duration = 0.0f;
 
@@ -39,7 +40,7 @@ public:
     // 노드 애니메이션 생성
     void Create(const aiNodeAnim* nodeAnim);
     // 애니메이션 키 보간
-    void Evaluate(const float& progressTime);
+    void Evaluate();
 
     void Update(const float& deltaTime);
 
