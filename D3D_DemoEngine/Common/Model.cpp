@@ -118,9 +118,7 @@ void Model::Render(ID3D11DeviceContext* deviceContext)
                 deviceContext->OMSetBlendState(nullptr, nullptr, 0xffffffff);
             }
             deviceContext->UpdateSubresource(m_CBMaterial, 0, nullptr, &m_Material, 0, 0);
-            
         }
-
         m_Nodes[i]->Render(deviceContext, this);
     }
 }
