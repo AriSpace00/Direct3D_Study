@@ -76,9 +76,9 @@ void DemoApp::Render()
 
     m_DeviceContext->VSSetShader(m_VertexShader, nullptr, 0);
     m_DeviceContext->PSSetShader(m_PixelShader, nullptr, 0);
-    
+
     m_DeviceContext->PSSetConstantBuffers(1, 1, &m_CBDirectionalLight);
-    
+
     m_DeviceContext->PSSetSamplers(0, 1, &m_SamplerLinear);
 
     // ViewMatrix, ProjectionMatrix 설정
@@ -96,7 +96,7 @@ void DemoApp::Render()
     // Model Render
     m_Model->Render(m_DeviceContext);
 
-    
+
     // ImGui
     {
         ImGuiIO& io = ImGui::GetIO(); (void)io;
@@ -416,7 +416,7 @@ bool DemoApp::InitScene()
 
     // 버텍스 셰이더가 문제없이 생성된 후 Input Layout 생성
     ID3DBlob* vertexShaderBuffer = nullptr;
-    HR_T(CompileShaderFromFile(L"FBXAnimVS.hlsl", "main", "vs_4_0", &vertexShaderBuffer));
+    HR_T(CompileShaderFromFile(L"SkinningVS.hlsl", "main", "vs_4_0", &vertexShaderBuffer));
     if (FAILED(hr))
     {
         MessageBoxA(m_hWnd, (char*)errorMessage->GetBufferPointer(), "Vertex Shader 오류", MB_OK);
@@ -442,7 +442,7 @@ bool DemoApp::InitScene()
 
     // 5. Render() 에서 파이프라인에 바인딩할 픽셀 셰이더 생성
     ID3DBlob* pixelShaderBuffer = nullptr;
-    HR_T(CompileShaderFromFile(L"FBXAnimPS.hlsl", "main", "ps_4_0", &pixelShaderBuffer));
+    HR_T(CompileShaderFromFile(L"SkinningPS.hlsl", "main", "ps_4_0", &pixelShaderBuffer));
     if (FAILED(hr))
     {
         MessageBoxA(m_hWnd, (char*)errorMessage->GetBufferPointer(), "Pixel Shader 생성 오류", MB_OK);

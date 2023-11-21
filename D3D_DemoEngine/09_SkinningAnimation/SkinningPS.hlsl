@@ -38,13 +38,13 @@ float4 main(PS_INPUT input) : SV_Target
     // Diffuse Light(Lambertian Lighting)
     float4 DiffuseColor = LightDiffuse * MaterialDiffuse * Diffuse;
     float4 DiffuseLight = dot(Normal, -vLightDirection);
-    if(UseDiffuseMap)
+    if (UseDiffuseMap)
     {
         // 방향이 다른 두 벡터(Normal, vLightDirection)을 내적하면 음수가 도출된다.
         // 따라서 부호를 맞춰주기 위해 vLightDirection에 -를 곱해준다.
         DiffuseLight *= DiffuseColor;
     }
-    
+
     // Specular Map
     // Specular Map용 이미지에서 물체에 비출 빛들의 강도를 가져옴
     float SpecularIntensity = 1;
@@ -62,12 +62,12 @@ float4 main(PS_INPUT input) : SV_Target
     SpecularLight = BlinnPhong;
 
     float4 Emissive = 0;
-    if(UseEmissiveMap)
+    if (UseEmissiveMap)
     {
         Emissive = txEmissive.Sample(samLinear, input.Texcoord) * MaterialEmissive;
     }
 
-    if(UseOpacityMap)
+    if (UseOpacityMap)
     {
         Opacity = txOpacity.Sample(samLinear, input.Texcoord).a;
     }
@@ -75,5 +75,6 @@ float4 main(PS_INPUT input) : SV_Target
     // 구성요소를 곱하면 값이 조절되는 것이지 합쳐지지 않음
     // 따라서 곱셈이 아닌 덧셈으로 각 구성요소를 결합함
     finalColor = saturate(AmbientLight + DiffuseLight + SpecularLight + Emissive);
+
     return float4(finalColor.rgb, Opacity);
 }
