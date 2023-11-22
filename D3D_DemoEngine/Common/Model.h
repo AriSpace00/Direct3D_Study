@@ -36,6 +36,11 @@ struct CB_Material
     Vector2 MT_pad5;
 };
 
+struct CB_MatrixPalette
+{
+    Matrix Array[128];
+};
+
 class Node;
 
 class Model
@@ -56,9 +61,11 @@ public:
 
     CB_Transform m_Transform;
     CB_Material m_Material;
+    CB_MatrixPalette m_MatrixPalette;
 
     ID3D11Buffer* m_CBTransform = nullptr;                  // 상수 버퍼: 변환행렬
     ID3D11Buffer* m_CBMaterial = nullptr;                   // 상수 버퍼: 변환행렬
+    ID3D11Buffer* m_CBMatrixPalette = nullptr;                   // 상수 버퍼: 변환행렬
 
     ID3D11BlendState* m_AlphaBlendState = nullptr;          // 샘플러 상태
 

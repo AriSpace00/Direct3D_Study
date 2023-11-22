@@ -16,7 +16,6 @@ Node::~Node()
 
 void Node::Update(const float& deltaTime, Model* model)
 {
-    auto test = m_Animation->m_AnimationKeys.size();
     m_Animation->Update(deltaTime);
 
     if (m_Animation->m_AnimationKeys.size() > 0)
@@ -48,6 +47,11 @@ void Node::Update(const float& deltaTime, Model* model)
     for (int i = 0; i < m_Meshes.size(); i++)
     {
         m_Meshes[i].m_NodeWorldTM = m_NodeWorldTM;
+
+        if (m_Meshes[i].m_BoneWeightVertices.size() > 0)
+        {
+            m_Meshes[i].UpdateMatrixPalette(model->m_MatrixPalette.Array);
+        }
 
         m_Meshes[i].m_NodeWorldTM *= model->m_Scale;
         m_Meshes[i].m_NodeWorldTM *= model->m_Rotation;

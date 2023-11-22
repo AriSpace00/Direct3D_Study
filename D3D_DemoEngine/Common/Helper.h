@@ -106,6 +106,7 @@ inline void HR_T(HRESULT hr)
 // With VS 11, we could load up prebuilt .cso files instead...
 //--------------------------------------------------------------------------------------
 HRESULT CompileShaderFromFile(const WCHAR* szFileName, LPCSTR szEntryPoint, LPCSTR szShaderModel, ID3DBlob** ppBlobOut);
+HRESULT CompileShaderFromFileWithMacro(const WCHAR* szFileName, const D3D_SHADER_MACRO* szDefines, LPCSTR szEntryPoint, LPCSTR szShaderModel, ID3DBlob** ppBlobOut);
 
 inline std::wstring ToWString(const std::string& s)
 {
@@ -115,3 +116,4 @@ inline std::wstring ToWString(const std::string& s)
 
 DirectX::XMFLOAT4X4 ConvertXMMATRIXToXMFLOAT4X4(const DirectX::XMMATRIX& xmMatrix);
 DirectX::XMMATRIX ConvertaiMatrixToXMMatrix(const aiMatrix4x4& aiMatrix);
+

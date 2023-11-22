@@ -14,6 +14,12 @@
 
 using namespace DirectX::SimpleMath;
 
+D3D_SHADER_MACRO defines[] =
+{
+    {"VERTEX_SKINNING", ""},
+    {nullptr, nullptr}
+};
+
 DemoApp::DemoApp(HINSTANCE hInstance)
     : GameApp(hInstance)
     , m_CameraNear(0.01f)
@@ -352,6 +358,7 @@ bool DemoApp::InitScene()
     std::string zelda = "../Resource/FBXLoad_Test/fbx/zeldaPosed001.fbx";
     std::string boneDummy = "../Resource/FBXLoad_Test/fbx/BoneDummy_Modify_WalkAnim.fbx";
     std::string materialTest = "../Resource/FBXLoad_Test/fbx/BoneDummyWithMaterial.fbx";
+    std::string skinningFBX = "../Resource/FBXLoad_Test/fbx/SkinningTest.fbx";
 
     std::string filePath;
 
@@ -402,6 +409,11 @@ bool DemoApp::InitScene()
         filePath = materialTest;
         break;
     }
+    case 9:
+    {
+        filePath = skinningFBX;
+        break;
+    }
     }
 
     // Model 클래스로 FBX Load
@@ -416,7 +428,7 @@ bool DemoApp::InitScene()
 
     // 버텍스 셰이더가 문제없이 생성된 후 Input Layout 생성
     ID3DBlob* vertexShaderBuffer = nullptr;
-    HR_T(CompileShaderFromFile(L"SkinningVS.hlsl", "main", "vs_4_0", &vertexShaderBuffer));
+    HR_T(CompileShaderFromFileWithMacro(L"SkinningVS.hlsl", defines, "main", "vs_5_0", &vertexShaderBuffer));
     if (FAILED(hr))
     {
         MessageBoxA(m_hWnd, (char*)errorMessage->GetBufferPointer(), "Vertex Shader 오류", MB_OK);
@@ -429,7 +441,9 @@ bool DemoApp::InitScene()
         {"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0},
         { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
         {"NORMAL",    0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
-        {"TANGENT",    0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0}
+        {"TANGENT",    0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
+        {"BlendIndices",    0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
+        {"BlendWeights",    0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0}
     };
 
     HR_T(m_Device->CreateInputLayout(layout, ARRAYSIZE(layout), vertexShaderBuffer->GetBufferPointer(), vertexShaderBuffer->GetBufferSize(), &m_InputLayout));
@@ -442,7 +456,7 @@ bool DemoApp::InitScene()
 
     // 5. Render() 에서 파이프라인에 바인딩할 픽셀 셰이더 생성
     ID3DBlob* pixelShaderBuffer = nullptr;
-    HR_T(CompileShaderFromFile(L"SkinningPS.hlsl", "main", "ps_4_0", &pixelShaderBuffer));
+    HR_T(CompileShaderFromFileWithMacro(L"SkinningPS.hlsl", defines, "main", "ps_5_0", &pixelShaderBuffer));
     if (FAILED(hr))
     {
         MessageBoxA(m_hWnd, (char*)errorMessage->GetBufferPointer(), "Pixel Shader 생성 오류", MB_OK);
