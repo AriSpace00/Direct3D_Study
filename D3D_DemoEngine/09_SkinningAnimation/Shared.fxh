@@ -46,7 +46,7 @@ cbuffer MatrixPalette : register(b3)
 
 struct VS_INPUT
 {
-    float4 PosModel : POSITION;
+    float3 PosModel : POSITION;
     float2 Texcoord : TEXCOORD0;
     float3 NorModel : NORMAL;
     float3 TanModel : TANGENT;

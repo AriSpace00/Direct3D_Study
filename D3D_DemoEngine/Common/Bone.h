@@ -17,6 +17,7 @@ public:
 public:
     string m_BoneName;
     Matrix m_OffsetMatrix;
+    Matrix* m_NodeWorldMatrixPtr;
     int m_BoneIndex;
 
 public:

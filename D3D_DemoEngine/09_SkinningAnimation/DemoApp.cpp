@@ -22,7 +22,7 @@ D3D_SHADER_MACRO defines[] =
 
 DemoApp::DemoApp(HINSTANCE hInstance)
     : GameApp(hInstance)
-    , m_CameraNear(0.01f)
+    , m_CameraNear(1.0f)
     , m_CameraFar(9999.9f)
     , m_CameraFovYRadius(90.0f)
 {
@@ -55,8 +55,16 @@ void DemoApp::Update()
 {
     __super::Update();
 
-    float deltaTime = GameTimer::m_Instance->DeltaTime();
-    m_Model->Update(deltaTime);
+    //float deltaTime = GameTimer::m_Instance->DeltaTime();
+    QueryPerformanceCounter(&m_CurrentTime);
+
+    // Calculate delta time in seconds
+    m_DeltaTime = static_cast<double>(m_CurrentTime.QuadPart - m_PrevTime.QuadPart) / m_Frequency.QuadPart;
+
+    // Update the previous time for the next iteration
+    m_PrevTime = m_CurrentTime;
+
+    m_Model->Update(m_DeltaTime);
 
     Matrix mSpin;
     Matrix mSpinX = XMMatrixRotationX(m_CubeRotationX);
@@ -101,7 +109,6 @@ void DemoApp::Render()
 
     // Model Render
     m_Model->Render(m_DeviceContext);
-
 
     // ImGui
     {
@@ -156,6 +163,7 @@ void DemoApp::Render()
             m_Eye = DirectX::XMVectorSet(x, y, z, 0.0f);
             m_ViewMatrix = XMMatrixLookToLH(m_Eye, m_At, m_Up);
 
+
             ImGui::Text("FOV Degree");
             ImGui::Text("Y");
             ImGui::SameLine();
@@ -165,7 +173,7 @@ void DemoApp::Render()
             ImGui::Text("Near / Far");
             ImGui::Text("Near");
             ImGui::SameLine();
-            ImGui::SliderFloat("##cn", &m_CameraNear, 0.01f, 9999.9f);
+            ImGui::SliderFloat("##cn", &m_CameraNear, 1.0f, 9999.9f);
             ImGui::Text("Far ");
             ImGui::SameLine();
             ImGui::SliderFloat("##cf", &m_CameraFar, 0.01f, 9999.9f);
@@ -442,8 +450,8 @@ bool DemoApp::InitScene()
         { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
         {"NORMAL",    0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
         {"TANGENT",    0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
-        {"BlendIndices",    0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
-        {"BlendWeights",    0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0}
+        {"BlendIndices",    0, DXGI_FORMAT_R32G32B32A32_UINT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
+        {"BlendWeights",    0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0}
     };
 
     HR_T(m_Device->CreateInputLayout(layout, ARRAYSIZE(layout), vertexShaderBuffer->GetBufferPointer(), vertexShaderBuffer->GetBufferSize(), &m_InputLayout));
@@ -486,6 +494,12 @@ bool DemoApp::InitScene()
     bd.CPUAccessFlags = 0;
     HR_T(m_Device->CreateBuffer(&bd, nullptr, &m_Model->m_CBMaterial));
 
+    bd.Usage = D3D11_USAGE_DEFAULT;
+    bd.ByteWidth = sizeof(CB_MatrixPalette);
+    bd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+    bd.CPUAccessFlags = 0;
+    HR_T(m_Device->CreateBuffer(&bd, nullptr, &m_Model->m_CBMatrixPalette));
+
     // Sample state 생성
     D3D11_SAMPLER_DESC sampDesc = {};
     sampDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
@@ -507,7 +521,7 @@ bool DemoApp::InitScene()
     m_ViewMatrix = XMMatrixLookToLH(m_Eye, m_At, m_Up);
 
     // 프로젝션 매트릭스 초기화
-    m_ProjectionMatrix = XMMatrixPerspectiveFovLH(XM_PIDIV4, m_ClientWidth / (FLOAT)m_ClientHeight, 0.01f, 20000.0f);
+    m_ProjectionMatrix = XMMatrixPerspectiveFovLH(XM_PIDIV4, m_ClientWidth / (FLOAT)m_ClientHeight, 1.0f, 20000.0f);
 
     // 7. 투명 처리를 위한 블렌드 상태 생성
     D3D11_BLEND_DESC blendDesc = {};
@@ -523,6 +537,12 @@ bool DemoApp::InitScene()
     blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
 
     HR_T(m_Device->CreateBlendState(&blendDesc, &m_Model->m_AlphaBlendState));
+
+    // Get the frequency of the performance counter
+    QueryPerformanceFrequency(&m_Frequency);
+
+    // Get the initial time
+    QueryPerformanceCounter(&m_PrevTime);
 
     return true;
 }

@@ -97,8 +97,8 @@ void Mesh::Create(ID3D11Device* device, aiMesh* mesh)
 
         for (int i = 0; i < mesh->mNumBones; i++)
         {
-            aiBone* bone = mesh->mBones[i];
-            string boneName = bone->mName.C_Str();
+            aiBone* aiBoneRef = mesh->mBones[i];
+            string boneName = aiBoneRef->mName.C_Str();
 
             int boneIndex = 0;
 
@@ -108,7 +108,7 @@ void Mesh::Create(ID3D11Device* device, aiMesh* mesh)
                 boneIndexCounter++;
 
                 m_Bones[boneIndex] = new Bone();
-                m_Bones[boneIndex]->Create(bone, i);
+                m_Bones[boneIndex]->Create(aiBoneRef, i);
 
                 BoneMapping[boneName] = boneIndex;
             }
@@ -117,10 +117,11 @@ void Mesh::Create(ID3D11Device* device, aiMesh* mesh)
                 boneIndex = BoneMapping[boneName];
             }
 
-            for (int j = 0; j < bone->mNumWeights; j++)
+            for (int j = 0; j < aiBoneRef->mNumWeights; j++)
             {
-                int vertexID = bone->mWeights[j].mVertexId;
-                int weight = bone->mWeights[j].mWeight;
+                unsigned int vertexID = aiBoneRef->mWeights[j].mVertexId;
+                float weight = aiBoneRef->mWeights[j].mWeight;
+
                 m_BoneWeightVertices[vertexID].AddBoneData(boneIndex, weight);
             }
         }
@@ -158,7 +159,7 @@ void Mesh::UpdateMatrixPalette(Matrix* matrixPalettePtr)
     assert(m_Bones.size() < 128);
     for (int i = 0; i < m_Bones.size(); i++)
     {
-        matrixPalettePtr[i] = (m_Bones[i]->m_OffsetMatrix * m_NodeWorldTM).Transpose();
+        matrixPalettePtr[i] = (m_Bones[i]->m_OffsetMatrix * *m_Bones[i]->m_NodeWorldMatrixPtr).Transpose();
     }
 }
 

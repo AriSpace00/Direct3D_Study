@@ -44,6 +44,11 @@ float4 main(PS_INPUT input) : SV_Target
         // 따라서 부호를 맞춰주기 위해 vLightDirection에 -를 곱해준다.
         DiffuseLight *= DiffuseColor;
     }
+    else
+    {
+        DiffuseColor.rgb = float4(0.8f, 0.8f, 0.8f, 1.0f);
+        DiffuseLight *= DiffuseColor;
+    }
 
     // Specular Map
     // Specular Map용 이미지에서 물체에 비출 빛들의 강도를 가져옴

@@ -21,6 +21,7 @@ Model::~Model()
 {
     SAFE_RELEASE(m_CBTransform);
     SAFE_RELEASE(m_CBMaterial);
+    SAFE_RELEASE(m_CBMatrixPalette);
     SAFE_RELEASE(m_AlphaBlendState);
 }
 
@@ -43,13 +44,25 @@ void Model::ReadFile(ID3D11Device* device, const std::string& path)
 
     // FBX 파일 경로를 scene에 바인딩
     Assimp::Importer importer;
-    unsigned int importFlags = aiProcess_Triangulate | aiProcess_GenNormals | aiProcess_GenUVCoords | aiProcess_CalcTangentSpace |
-        aiProcess_ConvertToLeftHanded;
+    unsigned int importFlags = aiProcess_Triangulate |      // 삼각형으로 변환
+        aiProcess_GenNormals |                              // 노말 생성
+        aiProcess_GenUVCoords |                             // UV 생성
+        aiProcess_CalcTangentSpace |                        // 탄젠트 생성
+        aiProcess_LimitBoneWeights |                        // 본의 영향을 받는 정점의 최대 개수를 4개로 제한
+        aiProcess_ConvertToLeftHanded;                      // 왼손 좌표계로 변환
+    importer.SetPropertyBool(AI_CONFIG_IMPORT_FBX_PRESERVE_PIVOTS, 0);
 
     const aiScene* scene = importer.ReadFile(path, importFlags);
     if (!scene) {
         LOG_ERRORA("Error loading FBX file: %s", importer.GetErrorString());
         return;
+    }
+
+    // Mesh 정보 Create
+    m_Meshes.resize(scene->mNumMeshes);
+    for (unsigned int i = 0; i < scene->mNumMeshes; i++)
+    {
+        m_Meshes[i].Create(device, scene->mMeshes[i]);
     }
 
     // Node 정보 Create
@@ -93,40 +106,15 @@ void Model::Render(ID3D11DeviceContext* deviceContext)
     // Mesh Render
     for (int i = 0; i < m_Nodes.size(); i++)
     {
-        // Material Render
-        for (size_t j = 0; j < m_Nodes[i]->m_Meshes.size(); j++)
-        {
-            size_t mi = m_Nodes[i]->m_Meshes[j].m_MaterialIndex;
-
-            deviceContext->PSSetShaderResources(0, 1, &m_Materials[mi].m_DiffuseRV);
-            deviceContext->PSSetShaderResources(1, 1, &m_Materials[mi].m_NormalRV);
-            deviceContext->PSSetShaderResources(2, 1, &m_Materials[mi].m_SpecularRV);
-            deviceContext->PSSetShaderResources(3, 1, &m_Materials[mi].m_EmissiveRV);
-            deviceContext->PSSetShaderResources(4, 1, &m_Materials[mi].m_OpacityRV);
-
-            m_Material.UseDiffuseMap = m_Materials[mi].m_DiffuseRV != nullptr ? true : false;
-            m_Material.UseNormalMap = m_Materials[mi].m_NormalRV != nullptr ? true : false;
-            m_Material.UseSpecularMap = m_Materials[mi].m_SpecularRV != nullptr ? true : false;
-            m_Material.UseEmissiveMap = m_Materials[mi].m_EmissiveRV != nullptr ? true : false;
-            m_Material.UseOpacityMap = m_Materials[mi].m_OpacityRV != nullptr ? true : false;
-
-            if (m_Material.UseOpacityMap)
-            {
-                deviceContext->OMSetBlendState(m_AlphaBlendState, nullptr, 0xffffffff);
-            }
-            else
-            {
-                deviceContext->OMSetBlendState(nullptr, nullptr, 0xffffffff);
-            }
-            deviceContext->UpdateSubresource(m_CBMaterial, 0, nullptr, &m_Material, 0, 0);
-        }
         m_Nodes[i]->Render(deviceContext, this);
     }
 }
 
 void Model::SetTransform(Matrix position, Matrix rotation, Matrix scale)
 {
+    m_Nodes[0]->m_NodeLocalTM = scale * rotation * position;
     m_Position = position;
     m_Rotation = rotation;
     m_Scale = scale;
 }
+

@@ -14,11 +14,11 @@ Node::~Node()
 {
 }
 
-void Node::Update(const float& deltaTime, Model* model)
+void Node::Update(float deltaTime, Model* model)
 {
     m_Animation->Update(deltaTime);
 
-    if (m_Animation->m_AnimationKeys.size() > 0)
+    if (!m_Animation->m_AnimationKeys.empty())
     {
         if (model->m_IsEvaluate)
         {
@@ -43,36 +43,58 @@ void Node::Update(const float& deltaTime, Model* model)
     {
         m_NodeWorldTM = m_NodeLocalTM;
     }
-
-    for (int i = 0; i < m_Meshes.size(); i++)
-    {
-        m_Meshes[i].m_NodeWorldTM = m_NodeWorldTM;
-
-        if (m_Meshes[i].m_BoneWeightVertices.size() > 0)
-        {
-            m_Meshes[i].UpdateMatrixPalette(model->m_MatrixPalette.Array);
-        }
-
-        m_Meshes[i].m_NodeWorldTM *= model->m_Scale;
-        m_Meshes[i].m_NodeWorldTM *= model->m_Rotation;
-        m_Meshes[i].m_NodeWorldTM *= model->m_Position;
-    }
 }
 
 void Node::Render(ID3D11DeviceContext* deviceContext, Model* model)
 {
-    // Node Render
-    for (size_t i = 0; i < m_Meshes.size(); i++)
+    model->m_Transform.WorldMatrix = XMMatrixTranspose(m_NodeWorldTM);
+    deviceContext->UpdateSubresource(model->m_CBTransform, 0, nullptr, &model->m_Transform, 0, 0);
+    deviceContext->VSSetConstantBuffers(0, 1, &model->m_CBTransform);
+    deviceContext->PSSetConstantBuffers(0, 1, &model->m_CBTransform);
+
+    for (size_t i = 0; i < model->m_Meshes.size(); i++)
     {
-        model->m_Transform.WorldMatrix = XMMatrixTranspose(m_Meshes[i].m_NodeWorldTM);
-        deviceContext->UpdateSubresource(model->m_CBTransform, 0, nullptr, &model->m_Transform, 0, 0);
-        deviceContext->VSSetConstantBuffers(0, 1, &model->m_CBTransform);
-        deviceContext->PSSetConstantBuffers(0, 1, &model->m_CBTransform);
+        size_t mi = model->m_Meshes[i].m_MaterialIndex;
 
-        deviceContext->IASetVertexBuffers(0, 1, &m_Meshes[i].m_VertexBuffer, &m_Meshes[i].m_VertexBufferStride, &m_Meshes[i].m_VertexBufferOffset);
-        deviceContext->IASetIndexBuffer(m_Meshes[i].m_IndexBuffer, DXGI_FORMAT_R16_UINT, 0);
+        deviceContext->PSSetShaderResources(0, 1, &model->m_Materials[mi].m_DiffuseRV);
+        deviceContext->PSSetShaderResources(1, 1, &model->m_Materials[mi].m_NormalRV);
+        deviceContext->PSSetShaderResources(2, 1, &model->m_Materials[mi].m_SpecularRV);
+        deviceContext->PSSetShaderResources(3, 1, &model->m_Materials[mi].m_EmissiveRV);
+        deviceContext->PSSetShaderResources(4, 1, &model->m_Materials[mi].m_OpacityRV);
 
-        deviceContext->DrawIndexed(m_Meshes[i].m_IndexCount, 0, 0);
+        model->m_Material.UseDiffuseMap = model->m_Materials[mi].m_DiffuseRV != nullptr ? true : false;
+        model->m_Material.UseNormalMap = model->m_Materials[mi].m_NormalRV != nullptr ? true : false;
+        model->m_Material.UseSpecularMap = model->m_Materials[mi].m_SpecularRV != nullptr ? true : false;
+        model->m_Material.UseEmissiveMap = model->m_Materials[mi].m_EmissiveRV != nullptr ? true : false;
+        model->m_Material.UseOpacityMap = model->m_Materials[mi].m_OpacityRV != nullptr ? true : false;
+
+        if (model->m_Material.UseOpacityMap)
+        {
+            deviceContext->OMSetBlendState(model->m_AlphaBlendState, nullptr, 0xffffffff);
+        }
+        else
+        {
+            deviceContext->OMSetBlendState(nullptr, nullptr, 0xffffffff);
+        }
+        deviceContext->UpdateSubresource(model->m_CBMaterial, 0, nullptr, &model->m_Material, 0, 0);
+
+        model->m_Meshes[i].UpdateMatrixPalette(model->m_MatrixPalette.Array);
+
+        for (const auto& matrix : model->m_MatrixPalette.Array)
+        {
+            assert(matrix._41 == 0.f);
+            assert(matrix._42 == 0.f);
+            assert(matrix._43 == 0.f);
+            assert(matrix._44 == 1.f);
+        }
+
+        deviceContext->UpdateSubresource(model->m_CBMatrixPalette, 0, nullptr, &model->m_MatrixPalette, 0, 0);
+        deviceContext->VSSetConstantBuffers(3, 1, &model->m_CBMatrixPalette);
+        deviceContext->PSSetConstantBuffers(3, 1, &model->m_CBMatrixPalette);
+
+        deviceContext->IASetVertexBuffers(0, 1, &model->m_Meshes[i].m_VertexBuffer, &model->m_Meshes[i].m_VertexBufferStride, &model->m_Meshes[i].m_VertexBufferOffset);
+        deviceContext->IASetIndexBuffer(model->m_Meshes[i].m_IndexBuffer, DXGI_FORMAT_R16_UINT, 0);
+        deviceContext->DrawIndexed(model->m_Meshes[i].m_IndexCount, 0, 0);
     }
 }
 
@@ -137,7 +159,7 @@ void Node::Create(ID3D11Device* device, Model* model, const aiScene* scene, cons
     model->m_Animations.push_back(m_Animation);
     model->m_Nodes.push_back(this);
 
-    if (node->mNumMeshes > 0)
+    /*if (node->mNumMeshes > 0)
     {
         int meshIndex = m_Meshes.size();
         for (int i = 0; i < node->mNumMeshes; i++)
@@ -147,14 +169,28 @@ void Node::Create(ID3D11Device* device, Model* model, const aiScene* scene, cons
             m_Meshes[meshIndex].Create(device, mesh);
             meshIndex++;
         }
+    }*/
+
+    for (int i = 0; i < model->m_Meshes.size(); i++)
+    {
+        if (model->m_Meshes[i].m_Bones.size() > 0)
+        {
+            for (int j = 0; j < model->m_Meshes[i].m_Bones.size(); j++)
+            {
+                if (model->m_Meshes[i].m_Bones[j]->m_BoneName == m_NodeName)
+                {
+                    model->m_Meshes[i].m_Bones[j]->m_NodeWorldMatrixPtr = &m_NodeWorldTM;
+                }
+            }
+        }
     }
 
     if (node->mNumChildren > 0)
     {
-        m_Childrens.resize(node->mNumChildren);
+        m_Children.resize(node->mNumChildren);
         for (int i = 0; i < node->mNumChildren; i++)
         {
-            m_Childrens[i].Create(device, model, scene, node->mChildren[i]);
+            m_Children[i].Create(device, model, scene, node->mChildren[i]);
         }
     }
 }

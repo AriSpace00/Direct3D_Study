@@ -32,7 +32,7 @@ struct BoneVertexWeight
     int BlendIndices[4] = {};
     float BlendWeights[4] = {};
 
-    void AddBoneData(int boneIndex, float weight)
+    void AddBoneData(unsigned int boneIndex, float weight)
     {
         assert(BlendWeights[0] == 0.0f || BlendWeights[1] == 0.0f || BlendWeights[2] == 0.0f || BlendWeights[3] == 0.0f);
         for (int i = 0; i < 4; i++)
@@ -70,8 +70,6 @@ public:
     vector<Bone*> m_Bones;
     vector<BoneVertexWeight> m_BoneWeightVertices;
     vector<WORD> m_Indices;
-
-    Matrix m_NodeWorldTM;
 
 private:
     // aiMesh로부터 불러온 정보로 Create 함수를 진행하기 위한 내부함수

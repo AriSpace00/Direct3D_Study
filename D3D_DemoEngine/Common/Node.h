@@ -38,14 +38,14 @@ public:
 
     Node* m_ParentNode;
 
-    vector<Node> m_Childrens;
+    vector<Node> m_Children;
     vector<Mesh> m_Meshes;
 
 public:
     void Create(ID3D11Device* device, Model* model, const aiScene* scene, const aiNode* node);
 
     // 애니메이션 업데이트
-    void Update(const float& deltaTime, Model* model);
+    void Update(float deltaTime, Model* model);
     void Render(ID3D11DeviceContext* deviceContext, Model* model);
 
 private:
