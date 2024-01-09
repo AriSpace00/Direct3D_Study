@@ -76,7 +76,7 @@ public:
 
     std::wstring m_FBXFileName;
 
-    int m_FBXModelIndex = 9;
+    int m_FBXModelIndex = 7;
 
     LARGE_INTEGER m_Frequency;
     LARGE_INTEGER m_PrevTime, m_CurrentTime;

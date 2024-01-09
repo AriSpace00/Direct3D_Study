@@ -364,7 +364,7 @@ bool DemoApp::InitScene()
     std::string torus = "../Resource/FBXLoad_Test/fbx/Torus.fbx";
     std::string tree = "../Resource/FBXLoad_Test/fbx/Tree.fbx";
     std::string zelda = "../Resource/FBXLoad_Test/fbx/zeldaPosed001.fbx";
-    std::string boneDummy = "../Resource/FBXLoad_Test/fbx/BoneDummy_Modify_WalkAnim.fbx";
+    std::string cerberus2 = "../Resource/FBXLoad_Test/fbx/cerberus2.fbx";
     std::string materialTest = "../Resource/FBXLoad_Test/fbx/BoneDummyWithMaterial.fbx";
     std::string skinningFBX = "../Resource/FBXLoad_Test/fbx/SkinningTest.fbx";
 
@@ -409,7 +409,7 @@ bool DemoApp::InitScene()
     }
     case 7:
     {
-        filePath = boneDummy;
+        filePath = cerberus2;
         break;
     }
     case 8:
