@@ -1,6 +1,6 @@
 #include "pch.h"
 #include "Mesh.h"
-#include "Model.h"
+//#include "Model.h"
 #include "Helper.h"
 
 #include <assimp/scene.h>

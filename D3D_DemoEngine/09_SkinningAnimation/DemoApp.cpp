@@ -1,7 +1,7 @@
 #include "DemoApp.h"
 #include "../Common/Helper.h"
 #include <d3dcompiler.h>
-#include <Directxtk/WICTextureLoader.h>
+//#include <Directxtk/WICTextureLoader.h>
 
 #include <imgui.h>
 #include <imgui_impl_win32.h>
@@ -368,7 +368,7 @@ bool DemoApp::InitScene()
     std::string materialTest = "../Resource/FBXLoad_Test/fbx/BoneDummyWithMaterial.fbx";
     std::string skinningFBX = "../Resource/FBXLoad_Test/fbx/SkinningTest.fbx";
 
-    std::string filePath;
+    std::string filePath; 
 
     switch (m_FBXModelIndex)
     {
