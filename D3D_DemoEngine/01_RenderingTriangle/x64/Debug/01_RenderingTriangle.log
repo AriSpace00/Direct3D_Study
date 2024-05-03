@@ -1,6 +1,8 @@
-﻿  compilation object save succeeded; see D:\게임인재원_5기_프로그래밍과정_2반\3학기\3D 그래픽스 프로그래밍 Assignment\Solutions\김민정\Direct3D_Study\D3D_DemoEngine\x64\Debug\BasicPixelShader.cso
-  compilation object save succeeded; see D:\게임인재원_5기_프로그래밍과정_2반\3학기\3D 그래픽스 프로그래밍 Assignment\Solutions\김민정\Direct3D_Study\D3D_DemoEngine\x64\Debug\BasicVertexShader.cso
+﻿  compilation object save succeeded; see E:\Direct3D_Study\D3D_DemoEngine\x64\Debug\BasicPixelShader.cso
+  compilation object save succeeded; see E:\Direct3D_Study\D3D_DemoEngine\x64\Debug\BasicVertexShader.cso
   DemoApp.cpp
   WinMain.cpp
   코드를 생성하고 있습니다...
-  01_RenderingTriangle.vcxproj -> D:\게임인재원_5기_프로그래밍과정_2반\3학기\3D 그래픽스 프로그래밍 Assignment\Solutions\김민정\Direct3D_Study\D3D_DemoEngine\x64\Debug\01_RenderingTriangle.exe
+  01_RenderingTriangle.vcxproj -> E:\Direct3D_Study\D3D_DemoEngine\x64\Debug\01_RenderingTriangle.exe
+  'pwsh.exe'은(는) 내부 또는 외부 명령, 실행할 수 있는 프로그램, 또는
+  배치 파일이 아닙니다.

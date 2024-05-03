@@ -1,2 +1,2 @@
-PlatformToolSet=v143:VCToolArchitecture=Native64Bit:VCToolsVersion=14.35.32215:TargetPlatformVersion=10.0.22000.0:VcpkgTriplet=x64-windows:
-Debug|x64|D:\게임인재원_5기_프로그래밍과정_2반\3학기\3D 그래픽스 프로그래밍 Assignment\Solutions\김민정\Direct3D_Study\D3D_DemoEngine\|
+PlatformToolSet=v143:VCToolArchitecture=Native64Bit:VCToolsVersion=14.39.33519:TargetPlatformVersion=10.0.22621.0:VcpkgTriplet=x64-windows:
+Debug|x64|E:\Direct3D_Study\D3D_DemoEngine\|

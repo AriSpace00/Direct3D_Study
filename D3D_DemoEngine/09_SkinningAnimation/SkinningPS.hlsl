@@ -81,5 +81,5 @@ float4 main(PS_INPUT input) : SV_Target
     // 따라서 곱셈이 아닌 덧셈으로 각 구성요소를 결합함
     finalColor = saturate(AmbientLight + DiffuseLight + SpecularLight + Emissive);
 
-    return float4(Normal, Opacity);
+    return finalColor;
 }
